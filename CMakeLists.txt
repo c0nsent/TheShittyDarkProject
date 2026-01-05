@@ -6,7 +6,7 @@ project(TheShittyDarkProject
 )
 
 find_package(glfw3 REQUIRED)
-find_package(OpenGL REQUIRED)
+find_package(glm REQUIRED)
 
 add_subdirectory(external/glad)
 
@@ -16,6 +16,6 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
 		glfw3
-		OpenGL::GL
 		glad
+		glm
 )
