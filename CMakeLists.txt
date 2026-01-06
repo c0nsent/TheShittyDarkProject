@@ -1,21 +1,29 @@
 cmake_minimum_required(VERSION 4.2)
 
-project(TheShittyDarkProject
-		VERSION 0.0.1
-		LANGUAGES CXX
-)
+project(LearnOpenGL)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
 add_subdirectory(external/glad)
 
-add_executable(${PROJECT_NAME}
-		main.cpp
+add_executable(01-CreatingWindow
+		01-creating-window.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(01-CreatingWindow
 		glfw3
 		glad
-		glm
+)
+
+add_executable(02-HelloTriangle
+		02-hello-triangle.cpp
+)
+
+target_link_libraries(02-HelloTriangle
+		glfw3
+		glad
 )
