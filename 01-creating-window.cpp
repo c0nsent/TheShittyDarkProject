@@ -3,16 +3,16 @@
 
 #include <cstdint>
 #include <iostream>
-#include <string>
-#include <bits/codecvt.h>
 
-using u8 = std::uint8_t;
+
 using i32 = std::int32_t;
+using u8 = std::uint8_t;
 using u32 = std::uint32_t;
 using u16 = std::uint16_t;
 
-constexpr u16 c_width = 640;
-constexpr u16 c_height = 480;
+
+constexpr u16 c_width{ 640 };
+constexpr u16 c_height{ 480 };
 
 struct Color
 {
@@ -29,18 +29,14 @@ void framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 heig
 	glViewport(0, 0, width, height);
 }
 
-[[nodiscard]] bool initGlfw(const u8 majorVersion, const u8 minorVersion, const bool isCoreProfile)
+void configGlfw(const u8 majorVersion, const u8 minorVersion, const bool isCoreProfile)
 {
-	if (not glfwInit()) return false;
-
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, majorVersion);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minorVersion);
 
 	const auto openglProfile{isCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE};
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, openglProfile);
-
-	return true;
 }
 
 void processInput(GLFWwindow *window, Color &windowFiller)
@@ -52,31 +48,22 @@ void processInput(GLFWwindow *window, Color &windowFiller)
 	{
 		windowFiller = Color{1.0f, 0.0f, 0.5f, 1.0f};
 	}
-
-
 }
+
+
 
 int main()
 {
 	glfwSetErrorCallback(errorCallback);
-
-	/*if (initGlfw(3, 3, true))
-	{
-		std::cerr << "Failed to initialize GLFW." << std::endl;
-		return 1;
-	}*/
-
 
 	if (not glfwInit())
 	{
 		std::cerr << "Failed to initialize GLFW." << std::endl;
 		return 1;
 	}
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	configGlfw(4, 6, true);
 
-	auto window{glfwCreateWindow(c_width, c_height, "This Charming Man", nullptr, nullptr)};
+	const auto window{glfwCreateWindow(c_width, c_height, "This Charming Man", nullptr, nullptr)};
 	if (window == nullptr)
 	{
 		std::cerr << "Failed to create GLFW window." << std::endl;
