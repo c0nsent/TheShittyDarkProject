@@ -7,8 +7,8 @@
 
 using i32 = std::int32_t;
 using u8 = std::uint8_t;
-using u32 = std::uint32_t;
 using u16 = std::uint16_t;
+using u32 = std::uint32_t;
 
 
 constexpr u16 c_width{ 640 };
@@ -77,6 +77,9 @@ int main()
 		std::cerr << "Failed to initialize GLAD." << std::endl;
 		return 1;
 	}
+
+	const auto version{ reinterpret_cast<const char*>(glGetString(GL_VERSION)) };
+	std::cout << "OpenGL version: " << version << std::endl;
 
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
