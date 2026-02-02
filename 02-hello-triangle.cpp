@@ -1,25 +1,21 @@
-/**
- * @date 06.01.2026
- * 
- * @author amitayus_
- */
-
-
-#include "glad/glad.h"
+#include <cmath>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <array>
-#include <stdfloat>
 #include <cstdint>
-#include <print>
 #include <iostream>
+#include <stdfloat>
+#include <array>
 
-
-using f32 = std::float32_t;
+using i8 = std::int8_t;
+using i16 = std::int16_t;
 using i32 = std::int32_t;
 using u8 = std::uint8_t;
 using u16 = std::uint16_t;
 using u32 = std::uint32_t;
+using f16 = std::float16_t;
+using f32 = std::float32_t;
+using f64 = std::float64_t;
 
 constexpr u16 c_width{ 640 };
 constexpr u16 c_height{ 480 };
@@ -39,53 +35,28 @@ void framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 heig
 	glViewport(0, 0, width, height);
 }
 
-void configGlfw(const u8 majorVersion, const u8 minorVersion, const bool isCoreProfile)
+constexpr auto c_vertexShaderSource{
+	R"(#version 460 core\n
+	layout (location = 0) in vec3 aPos;\n
+	void main()\n
+	{gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);}
+)"};
+
+void configGlfw(const u8 majorVersion=4, const u8 minorVersion=6, const bool isCoreProfile=true)
 {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, majorVersion);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minorVersion);
 
-	const auto openglProfile{isCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE};
+	const i32 openglProfile{isCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE};
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, openglProfile);
 }
 
-void processInput(GLFWwindow *window, Color &windowFiller)
+void processInput(GLFWwindow *window)
 {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
 
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		windowFiller = Color{1.0f, 0.0f, 0.5f, 1.0f};
 }
 
-constexpr std::array triangleVertices {
-	-0.5f, -0.5f, 0.f, 0.5f, -0.5f, 0.f, 0.0f, -0.5f, 0.f
-};
-
-void printVertexCompileStatus(const u32 vertexShaderId, const std::string_view logInfo, const i32 compileStatus)
-{
-	if (not compileStatus)
-	{
-		glGetShaderInfoLog(vertexShaderId, logInfo.size(), nullptr, reinterpret_cast<GLchar *>(logInfo.data()));
-		std::println("Блядь пиздец");
-		std::println("{}",infoLog);
-	}
-}
-
-constexpr auto vertexShaderSource{
-	"#version 460 core\n"
-	"layout (location = 0) in vec3 aPos;\n"
-	"void main()\n"
-	"{\n"
-	"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-	"}\0"
-};
-
-constexpr auto fragmentShaderSource{
-	"#version 460 core\n"
-	"out vec4 FragColor;\n"
-	"void main() { FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f) }\n"
-};
 
 
 int main()
@@ -97,7 +68,7 @@ int main()
 		std::cerr << "Failed to initialize GLFW." << std::endl;
 		return 1;
 	}
-	configGlfw(4, 6, true);
+	configGlfw();
 
 	const auto window{glfwCreateWindow(c_width, c_height, "This Charming Man", nullptr, nullptr)};
 	if (window == nullptr)
@@ -114,18 +85,25 @@ int main()
 		return 1;
 	}
 
-	//std::println("{}", sizeof(triangleVertices));
-	u32 vertexBufferObj{};
-	glGenBuffers(1, &vertexBufferObj);
+	const auto version{ reinterpret_cast<const char*>(glGetString(GL_VERSION)) };
+	std::cout << "OpenGL version: " << version << std::endl;
 
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObj);
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices.data(), GL_STATIC_DRAW);
+	std::array vertices{ std::move(std::to_array<f32>({
+		-0.5f, -0.5f, 0.0f,
+		0.5f, -0.5f, 0.0f,
+		0.0f, 0.5f, 0.0f
+	}))};
 
-	const u32 vertexShader{ glCreateShader(GL_VERTEX_SHADER) };
+	u32 vertexBufferObject{};
+	glGenBuffers(1, &vertexBufferObject);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(f32), vertices.data(), GL_STATIC_DRAW);
 
-	std::println("{}", vertexShader);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
+	const u32 vertexShader{glCreateShader(GL_VERTEX_SHADER)};
+
+	glShaderSource(vertexShader, 1, &c_vertexShaderSource, nullptr);
 	glCompileShader(vertexShader);
 
 	i32 success{};
@@ -135,31 +113,17 @@ int main()
 	if (not success)
 	{
 		glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-		std::println("Блядь пиздец");
-		std::println("{}",infoLog);
-
-		return 1;
+		std::cerr << "Failed to compile vertex shader." << std::endl;
 	}
 
-	const u32 fragmentShader{ glCreateShader(GL_FRAGMENT_SHADER) };
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-	glCompileShader(fragmentShader);
 
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	if (not success)
-	{
-		glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-		std::println("{}", infoLog);
-	}
-
-	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+	const Color clearColor{ 1.0f, 1.0f, 1.0f, 1.0f };
 
 	while (not glfwWindowShouldClose(window))
 	{
-		Color windowFiller{0.2f, 0.3f, 0.3f, 1.0f};
-		processInput(window, windowFiller);
+		processInput(window);
 
-		glClearColor(windowFiller.red, windowFiller.green, windowFiller.blue, windowFiller.alpha);
+		glClearColor(clearColor.red, clearColor.green, clearColor.blue, clearColor.alpha);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glfwSwapBuffers(window);
@@ -167,4 +131,5 @@ int main()
 	}
 
 	glfwTerminate();
+	return 0;
 }
