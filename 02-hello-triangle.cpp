@@ -2,10 +2,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <array>
 #include <cstdint>
+#include <string>
 #include <iostream>
 #include <stdfloat>
-#include <array>
+#include <oneapi/tbb/info.h>
 
 using i8 = std::int8_t;
 using i16 = std::int16_t;
@@ -36,11 +38,19 @@ void framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 heig
 }
 
 constexpr auto c_vertexShaderSource{
-	R"(#version 460 core\n
-	layout (location = 0) in vec3 aPos;\n
-	void main()\n
-	{gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);}
-)"};
+	"#version 460 core\n"
+	"layout (location = 0) in vec3 aPos;\n"
+	"void main()\n"
+	"{\n"
+	"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+	"}\0"
+};
+
+constexpr auto с_fragmentShaderSource{
+	"#version 460 core\n"
+	"out vec4 FragColor;\n"
+	"void main() { FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); }\n"
+};
 
 void configGlfw(const u8 majorVersion=4, const u8 minorVersion=6, const bool isCoreProfile=true)
 {
@@ -51,6 +61,21 @@ void configGlfw(const u8 majorVersion=4, const u8 minorVersion=6, const bool isC
 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, openglProfile);
 }
+
+void shaderCompilationStatus(const u32 shaderId)
+{
+	i32 success{};
+	glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+
+	if (not success)
+	{
+		i32 logSize{};
+		glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &logSize);
+		char infoLog[logSize];
+		glGetShaderInfoLog(shaderId, logSize, nullptr, infoLog);
+		std::cerr << infoLog << std::endl;
+	}}
+
 
 void processInput(GLFWwindow *window)
 {
@@ -90,7 +115,7 @@ int main()
 
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-	std::array vertices{ std::move(std::to_array<f32>({
+	constexpr std::array vertices{ std::move(std::to_array<f32>({
 		-0.5f, -0.5f, 0.0f,
 		0.5f, -0.5f, 0.0f,
 		0.0f, 0.5f, 0.0f
@@ -102,20 +127,40 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(f32), vertices.data(), GL_STATIC_DRAW);
 
 	const u32 vertexShader{glCreateShader(GL_VERTEX_SHADER)};
-
 	glShaderSource(vertexShader, 1, &c_vertexShaderSource, nullptr);
 	glCompileShader(vertexShader);
 
-	i32 success{};
-	char infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	shaderCompilationStatus(vertexShader);
 
+	const u32 fragmentShader{glCreateShader(GL_FRAGMENT_SHADER)};
+	glShaderSource(fragmentShader, 1, &с_fragmentShaderSource, nullptr);
+	glCompileShader(fragmentShader);
+
+	shaderCompilationStatus(fragmentShader);
+
+	const u32 shaderProgram{glCreateProgram()};
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+
+	i32 success{};
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 	if (not success)
 	{
-		glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-		std::cerr << "Failed to compile vertex shader." << std::endl;
+		i32 logSize{};
+		glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &logSize);
+		char infoLog[logSize];
+		glGetProgramInfoLog(shaderProgram, logSize, nullptr, infoLog);
+		std::cerr << infoLog << std::endl;
 	}
 
+	glUseProgram(shaderProgram);
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+	glEnableVertexAttribArray(0);
 
 	const Color clearColor{ 1.0f, 1.0f, 1.0f, 1.0f };
 
