@@ -1,41 +1,43 @@
-#include <cmath>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <array>
 #include <cstdint>
-#include <string>
+#include <functional>
 #include <iostream>
 #include <stdfloat>
-#include <oneapi/tbb/info.h>
 
-using i8 = std::int8_t;
+using i8  = std::int8_t;
 using i16 = std::int16_t;
 using i32 = std::int32_t;
-using u8 = std::uint8_t;
+using u8  = std::uint8_t;
 using u16 = std::uint16_t;
 using u32 = std::uint32_t;
 using f16 = std::float16_t;
 using f32 = std::float32_t;
 using f64 = std::float64_t;
 
-constexpr u16 c_width{ 640 };
-constexpr u16 c_height{ 480 };
+constexpr u16 c_width{640};
+constexpr u16 c_height{480};
+
 
 struct Color
 {
 	float red, green, blue, alpha;
 };
 
+
 void errorCallback(const i32 error, const char *description)
 {
-	std::cerr << "Error: "  << error << " - " << description << std::endl;
+	std::cerr << "Error: " << error << " - " << description << std::endl;
 }
+
 
 void framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 height)
 {
 	glViewport(0, 0, width, height);
 }
+
 
 constexpr auto c_vertexShaderSource{
 	"#version 460 core\n"
@@ -52,7 +54,8 @@ constexpr auto с_fragmentShaderSource{
 	"void main() { FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); }\n"
 };
 
-void configGlfw(const u8 majorVersion=4, const u8 minorVersion=6, const bool isCoreProfile=true)
+
+void configGlfw(const u8 majorVersion = 4, const u8 minorVersion = 6, const bool isCoreProfile = true)
 {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, majorVersion);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minorVersion);
@@ -62,33 +65,37 @@ void configGlfw(const u8 majorVersion=4, const u8 minorVersion=6, const bool isC
 	glfwWindowHint(GLFW_OPENGL_PROFILE, openglProfile);
 }
 
+
 void shaderCompilationStatus(const u32 shaderId)
 {
-	i32 success{};
-	glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+	const auto infoLogLength{ std::invoke(
+		[&shaderId]
+		{
+			i32 result{};
+			glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &result);
+			return result;
+		}
+	)};
 
-	if (not success)
+	if(infoLogLength == 0)
 	{
-		i32 logSize{};
-		glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &logSize);
-		char infoLog[logSize];
-		glGetShaderInfoLog(shaderId, logSize, nullptr, infoLog);
+		char infoLog[infoLogLength];
+		glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLog);
 		std::cerr << infoLog << std::endl;
-	}}
+	}
+}
 
 
 void processInput(GLFWwindow *window)
 {
-
 }
-
 
 
 int main()
 {
 	glfwSetErrorCallback(errorCallback);
 
-	if (not glfwInit())
+	if(not glfwInit())
 	{
 		std::cerr << "Failed to initialize GLFW." << std::endl;
 		return 1;
@@ -96,7 +103,7 @@ int main()
 	configGlfw();
 
 	const auto window{glfwCreateWindow(c_width, c_height, "This Charming Man", nullptr, nullptr)};
-	if (window == nullptr)
+	if(window == nullptr)
 	{
 		std::cerr << "Failed to create GLFW window." << std::endl;
 		glfwTerminate();
@@ -104,22 +111,24 @@ int main()
 	}
 	glfwMakeContextCurrent(window);
 
-	if (not gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+	if(not gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
 	{
 		std::cerr << "Failed to initialize GLAD." << std::endl;
 		return 1;
 	}
 
-	const auto version{ reinterpret_cast<const char*>(glGetString(GL_VERSION)) };
+	const auto version{reinterpret_cast<const char *>(glGetString(GL_VERSION))};
 	std::cout << "OpenGL version: " << version << std::endl;
 
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-	constexpr std::array vertices{ std::move(std::to_array<f32>({
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.0f, 0.5f, 0.0f
-	}))};
+	constexpr std::array vertices{
+		std::to_array<f32>({
+			-0.5f, -0.5f, 0.0f,
+			0.5f, -0.5f, 0.0f,
+			0.0f, 0.5f, 0.0f
+		})
+	};
 
 	u32 vertexBufferObject{};
 	glGenBuffers(1, &vertexBufferObject);
@@ -145,10 +154,11 @@ int main()
 
 	i32 success{};
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if (not success)
+	if(not success)
 	{
 		i32 logSize{};
 		glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &logSize);
+		std::cout << "Log Length: " << logSize << std::endl;
 		char infoLog[logSize];
 		glGetProgramInfoLog(shaderProgram, logSize, nullptr, infoLog);
 		std::cerr << infoLog << std::endl;
@@ -159,12 +169,17 @@ int main()
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), static_cast<void *>(nullptr));
 	glEnableVertexAttribArray(0);
 
-	const Color clearColor{ 1.0f, 1.0f, 1.0f, 1.0f };
+	u32 vertexArrayObject{};
+	glGenVertexArrays(1, &vertexArrayObject);
 
-	while (not glfwWindowShouldClose(window))
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	const Color clearColor{1.0f, 1.0f, 1.0f, 1.0f};
+
+	while(not glfwWindowShouldClose(window))
 	{
 		processInput(window);
 
