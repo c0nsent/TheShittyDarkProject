@@ -19,11 +19,5 @@ target_link_libraries(01-CreatingWindow
 		glad
 )
 
-add_executable(02-HelloTriangle
-		02-hello-triangle.cpp
-)
+add_subdirectory(02-hello-triangle)
 
-target_link_libraries(02-HelloTriangle
-		glfw3
-		glad
-)

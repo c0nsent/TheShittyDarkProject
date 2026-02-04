@@ -3,8 +3,10 @@
 
 #include <array>
 #include <cstdint>
+#include <fstream>
 #include <functional>
 #include <iostream>
+#include <sstream>
 #include <stdfloat>
 
 using i8  = std::int8_t;
@@ -39,24 +41,6 @@ void framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 heig
 	glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window) {}
-
-constexpr auto c_vertexShaderSource{
-	"#version 460 core\n"
-	"layout (location = 0) in vec3 aPos;\n"
-	"void main()\n"
-	"{\n"
-	"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-	"}\0"
-};
-
-constexpr auto с_fragmentShaderSource{
-	"#version 460 core\n"
-	"out vec4 FragColor;\n"
-	"void main() { FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); }\n"
-};
-
-
 void configGlfw(const u8 majorVersion = 4, const u8 minorVersion = 6, const bool isCoreProfile = true)
 {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, majorVersion);
@@ -67,6 +51,18 @@ void configGlfw(const u8 majorVersion = 4, const u8 minorVersion = 6, const bool
 	glfwWindowHint(GLFW_OPENGL_PROFILE, openglProfile);
 }
 
+std::string readShaderSourceFile(const std::string_view filename)
+{
+	std::ifstream file{filename.data()};
+
+	if (not file.is_open())
+		std::cerr << "Failed to open the file: " << filename << std::endl;
+	std::ostringstream ss;
+
+	ss << file.rdbuf();
+
+	return ss.str();
+}
 
 void shaderCompilationStatus(const u32 shaderId)
 {
@@ -118,7 +114,7 @@ int main()
 	}
 	configGlfw();
 
-	auto window{glfwCreateWindow(c_width, c_height, "This Charming Man", nullptr, nullptr)};
+	const auto window{glfwCreateWindow(c_width, c_height, "This Charming Man", nullptr, nullptr)};
 	if(window == nullptr)
 	{
 		std::cerr << "Failed to create GLFW window." << std::endl;
@@ -137,13 +133,21 @@ int main()
 	const auto version{reinterpret_cast<const char *>(glGetString(GL_VERSION))};
 	std::cout << "OpenGL version: " << version << std::endl;
 
+	const auto vertexShaderString{ readShaderSourceFile("vertex-shader.glsl") };
+	const GLchar *vertexShaderSource{vertexShaderString.c_str()};
+
+	std::cout << vertexShaderSource << std::endl;
+
 	const u32 vertexShader{glCreateShader(GL_VERTEX_SHADER)};
-	glShaderSource(vertexShader, 1, &c_vertexShaderSource, nullptr);
+	glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
 	glCompileShader(vertexShader);
 	shaderCompilationStatus(vertexShader);
 
+	const auto fragmentShaderString{ readShaderSourceFile("fragment-shader.glsl") };
+	const GLchar *fragmentShaderSource{fragmentShaderString.c_str()};
+
 	const u32 fragmentShader{glCreateShader(GL_FRAGMENT_SHADER)};
-	glShaderSource(fragmentShader, 1, &с_fragmentShaderSource, nullptr);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
 	glCompileShader(fragmentShader);
 
 	shaderCompilationStatus(fragmentShader);
@@ -183,8 +187,6 @@ int main()
 
 	while(not glfwWindowShouldClose(window))
 	{
-		processInput(window);
-
 		glClearColor(clearColor.red, clearColor.green, clearColor.blue, clearColor.alpha);
 		glClear(GL_COLOR_BUFFER_BIT);
 
