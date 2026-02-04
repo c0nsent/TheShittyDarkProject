@@ -20,12 +20,13 @@ using f64 = std::float64_t;
 constexpr u16 c_width{640};
 constexpr u16 c_height{480};
 
-
 struct Color
 {
-	float red, green, blue, alpha;
+	f32 red;
+	f32 green;
+	f32 blue;
+	f32 alpha;
 };
-
 
 void errorCallback(const i32 error, const char *description)
 {
@@ -38,6 +39,7 @@ void framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 heig
 	glViewport(0, 0, width, height);
 }
 
+void processInput(GLFWwindow *window) {}
 
 constexpr auto c_vertexShaderSource{
 	"#version 460 core\n"
@@ -77,17 +79,31 @@ void shaderCompilationStatus(const u32 shaderId)
 		}
 	)};
 
-	if(infoLogLength == 0)
+	if(infoLogLength != 0)
 	{
+		std::cerr << "Shader compilation failed." << std::endl;
 		char infoLog[infoLogLength];
 		glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLog);
 		std::cerr << infoLog << std::endl;
 	}
 }
 
-
-void processInput(GLFWwindow *window)
+void programCompilationStatusOutput(const u32 shaderId)
 {
+	const i32 infoLogLength{ std::invoke([&shaderId]
+	{
+		i32 length;
+		glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &length);
+		return length;
+	})};
+
+	if(infoLogLength != 0)
+	{
+		std::cout << "Shader program linking failed." << std::endl;
+		char infoLog[512];
+		glGetProgramInfoLog(shaderId, 512, nullptr, infoLog);
+		std::cerr << infoLog << std::endl;
+	}
 }
 
 
@@ -102,7 +118,7 @@ int main()
 	}
 	configGlfw();
 
-	const auto window{glfwCreateWindow(c_width, c_height, "This Charming Man", nullptr, nullptr)};
+	auto window{glfwCreateWindow(c_width, c_height, "This Charming Man", nullptr, nullptr)};
 	if(window == nullptr)
 	{
 		std::cerr << "Failed to create GLFW window." << std::endl;
@@ -110,6 +126,7 @@ int main()
 		return 1;
 	}
 	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
 	if(not gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
 	{
@@ -120,7 +137,24 @@ int main()
 	const auto version{reinterpret_cast<const char *>(glGetString(GL_VERSION))};
 	std::cout << "OpenGL version: " << version << std::endl;
 
-	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+	const u32 vertexShader{glCreateShader(GL_VERTEX_SHADER)};
+	glShaderSource(vertexShader, 1, &c_vertexShaderSource, nullptr);
+	glCompileShader(vertexShader);
+	shaderCompilationStatus(vertexShader);
+
+	const u32 fragmentShader{glCreateShader(GL_FRAGMENT_SHADER)};
+	glShaderSource(fragmentShader, 1, &с_fragmentShaderSource, nullptr);
+	glCompileShader(fragmentShader);
+
+	shaderCompilationStatus(fragmentShader);
+
+	const u32 shaderProgram{glCreateProgram()};
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
 
 	constexpr std::array vertices{
 		std::to_array<f32>({
@@ -135,49 +169,17 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(f32), vertices.data(), GL_STATIC_DRAW);
 
-	const u32 vertexShader{glCreateShader(GL_VERTEX_SHADER)};
-	glShaderSource(vertexShader, 1, &c_vertexShaderSource, nullptr);
-	glCompileShader(vertexShader);
-
-	shaderCompilationStatus(vertexShader);
-
-	const u32 fragmentShader{glCreateShader(GL_FRAGMENT_SHADER)};
-	glShaderSource(fragmentShader, 1, &с_fragmentShaderSource, nullptr);
-	glCompileShader(fragmentShader);
-
-	shaderCompilationStatus(fragmentShader);
-
-	const u32 shaderProgram{glCreateProgram()};
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	i32 success{};
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	if(not success)
-	{
-		i32 logSize{};
-		glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &logSize);
-		std::cout << "Log Length: " << logSize << std::endl;
-		char infoLog[logSize];
-		glGetProgramInfoLog(shaderProgram, logSize, nullptr, infoLog);
-		std::cerr << infoLog << std::endl;
-	}
-
-	glUseProgram(shaderProgram);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	u32 vertexArrayObject{};
+	glGenVertexArrays(1, &vertexArrayObject);
+	glBindVertexArray(vertexArrayObject);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), static_cast<void *>(nullptr));
 	glEnableVertexAttribArray(0);
 
-	u32 vertexArrayObject{};
-	glGenVertexArrays(1, &vertexArrayObject);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-
-	const Color clearColor{1.0f, 1.0f, 1.0f, 1.0f};
+	const Color clearColor{0.2f, 0.3f, 0.3f, 1.0f};
 
 	while(not glfwWindowShouldClose(window))
 	{
@@ -186,9 +188,17 @@ int main()
 		glClearColor(clearColor.red, clearColor.green, clearColor.blue, clearColor.alpha);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		glUseProgram(shaderProgram);
+		glBindVertexArray(vertexArrayObject);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
+	glDeleteVertexArrays(1, &vertexArrayObject);
+	glDeleteBuffers(1, &vertexBufferObject);
+	glDeleteProgram(shaderProgram);
 
 	glfwTerminate();
 	return 0;
