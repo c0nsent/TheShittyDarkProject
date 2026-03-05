@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include "basic-type-aliases.hpp"
+#include "openglpp.hpp"
 
 using namespace sdp;
 
@@ -14,20 +15,9 @@ constexpr i32 WIDTH{800};
 constexpr i32 HEIGHT{600};
 constexpr auto TITLE{"The Shitty Dark Project"};
 
-namespace gl
-{
-	class Shader
-	{
-		public:
-		enum class Type
-		{
-			Vertex = GL_VERTEX_SHADER,
-			Fragment = GL_FRAGMENT_SHADER,
-		};
-	};
-}
 
-auto glCheckError_(const char *file, i32 line) -> GLenum
+
+auto glCheckError_(const char *file, const i32 line) -> GLenum
 {
 	GLenum code{};
 
@@ -261,6 +251,7 @@ auto main() -> int
 
 			glUseProgram(shaderProgram);
 			glBindVertexArray(vertexBufferObject);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 			glfwSwapBuffers(window);

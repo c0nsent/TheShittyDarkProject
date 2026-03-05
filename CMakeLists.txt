@@ -14,6 +14,7 @@ find_package(glm REQUIRED)
 add_subdirectory(external/glad)
 
 add_executable(${PROJECT_NAME}
+		openglpp.cc openglpp.hpp
 		basic-type-aliases.hpp
 		main.cc
 )
