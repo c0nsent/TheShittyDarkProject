@@ -1,7 +1,7 @@
+#include <array>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-#include <array>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -14,8 +14,69 @@ constexpr i32 WIDTH{800};
 constexpr i32 HEIGHT{600};
 constexpr auto TITLE{"The Shitty Dark Project"};
 
+namespace gl
+{
+	class Shader
+	{
+		public:
+		enum class Type
+		{
+			Vertex = GL_VERTEX_SHADER,
+			Fragment = GL_FRAGMENT_SHADER,
+		};
+	};
+}
+
+auto glCheckError_(const char *file, i32 line) -> GLenum
+{
+	GLenum code{};
+
+	while((code = glGetError()) != GL_NO_ERROR)
+	{
+		std::string error;
+		switch (code)
+		{
+			case GL_INVALID_ENUM:
+				error = "INVALID_ENUM";
+				break;
+			case GL_INVALID_VALUE:
+				error = "INVALID_VALUE";
+				break;
+			case GL_INVALID_OPERATION:
+				error = "INVALID_OPERATION";
+				break;
+			case GL_STACK_OVERFLOW:
+				error = "STACK_OVERFLOW";
+				break;
+			case GL_STACK_UNDERFLOW:
+				error = "STACK_UNDERFLOW";
+				break;
+			case GL_OUT_OF_MEMORY:
+				error = "OUT_OF_MEMORY";
+				break;
+			case GL_INVALID_FRAMEBUFFER_OPERATION:
+				error = "INVALID_FRAMEBUFFER_OPERATION";
+				break;
+
+			default:
+				error = "UNKNOWN_ERROR";
+		}
+
+		std::cout << "Error " << error << " : " << line << " | " << error <<std::endl;
+	}
+	return code;
+}
+#define glCheckError() glCheckError_(__FILE__, __LINE__)
+
+auto errorCallback(const i32 error, const char *description) -> void
+{
+	std::cerr << "Error: " << error << " " << description << std::endl;
+}
+
 auto initGlfw(const i32 openglMajorVersion, const i32 openglMinorVersion, const bool isCoreProfile) -> void
 {
+	glfwSetErrorCallback(errorCallback);
+
 	if (not glfwInit())
 		throw std::runtime_error("GLFW could not be initialized");
 
@@ -37,16 +98,19 @@ auto initGlfw(const i32 openglMajorVersion, const i32 openglMinorVersion, const 
 	return window;
 }
 
+
 auto initGlad() -> void
 {
 	if (not gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
 		throw std::runtime_error("Failed to initialize GLAD.");
 }
 
+
 auto framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 height) -> void
 {
 	glViewport(0, 0, width, height);
 }
+
 
 void processInput(GLFWwindow *window)
 {
@@ -86,6 +150,16 @@ void outputShaderCompilationStatus(const u32 shaderId)
 		throw std::runtime_error{shaderTypeName + " shader compilation failed"};
 }
 
+
+[[nodiscard]] auto createShader(const gl::Shader::Type type, const char * source) -> u32
+{
+	const u32 vertexShader{glCreateShader(static_cast<u32>(type))};
+	glShaderSource(vertexShader, 1, &source, nullptr);
+	glCompileShader(vertexShader);
+
+	return vertexShader;
+}
+
 auto main() -> int
 {
 	try
@@ -98,21 +172,6 @@ auto main() -> int
 
 		glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-		constexpr auto vertices{ std::to_array<f32>({
-			-0.5f, -0.5f, 0.0f,
-			0.5f, -0.5f, 0.0f,
-			0.0f, 0.5f, 0.0f,
-		})};
-
-
-		u32 vertexBufferObject, vertexArrayObj ;
-		glGenVertexArrays(1, &vertexArrayObj);
-		glGenBuffers(1, &vertexBufferObject);
-		glBindVertexArray(vertexArrayObj);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(f32), vertices.data(), GL_STATIC_DRAW);
-
 		constexpr auto vertexShaderSource{R"(
 			#version 460 core
 			layout (location=0) in vec3 aPos;
@@ -123,9 +182,7 @@ auto main() -> int
 			}
 		)"};
 
-		const u32 vertexShader{glCreateShader(GL_VERTEX_SHADER)};
-		glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-		glCompileShader(vertexShader);
+		const u32 vertexShader{ createShader(gl::Shader::Type::Vertex, vertexShaderSource) };
 		outputShaderCompilationStatus(vertexShader);
 
 		constexpr auto fragmentShaderSource{R"(
@@ -139,15 +196,18 @@ auto main() -> int
 			}
 		)"};
 
-		const u32 fragmentShader{glCreateShader(GL_FRAGMENT_SHADER)};
-		glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-		glCompileShader(fragmentShader);
+		const u32 fragmentShader{ createShader(gl::Shader::Type::Fragment, fragmentShaderSource) };
 		outputShaderCompilationStatus(fragmentShader);
 
-		u32 shaderProgram{glCreateProgram()};
+		const u32 shaderProgram{glCreateProgram()};
 		glAttachShader(shaderProgram, vertexShader);
 		glAttachShader(shaderProgram, fragmentShader);
 		glLinkProgram(shaderProgram);
+
+		glCheckError();
+
+		glDeleteShader(vertexShader);
+		glDeleteShader(fragmentShader);
 
 		i32 infoLogSize{};
 		glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &infoLogSize);
@@ -159,11 +219,38 @@ auto main() -> int
 			return 1;
 		}
 
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
+		constexpr auto vertices{ std::to_array<f32>({
+			0.5f,  0.5f, 0.0f,
+			0.5f, -0.5f, 0.0f,
+		   -0.5f, -0.5f, 0.0f,
+		   -0.5f,  0.5f, 0.0f
+		})};
+
+		constexpr auto indices{ std::to_array<u32>({
+			0, 1, 3,
+			1, 2, 3
+		})};
+
+		u32 vertexBufferObject, vertexArrayObj, elementBufferObj;
+		glGenVertexArrays(1, &vertexArrayObj);
+		glGenBuffers(1, &vertexBufferObject);
+		glGenBuffers(1, &elementBufferObj);
+
+		glBindVertexArray(vertexArrayObj);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferObj);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices.front()), indices.data(), GL_STATIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), static_cast<void *>(0));
 		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glCheckError();
+		glBindVertexArray(0);
+		glCheckError();
 
 		while (not glfwWindowShouldClose(window))
 		{
@@ -174,14 +261,15 @@ auto main() -> int
 
 			glUseProgram(shaderProgram);
 			glBindVertexArray(vertexBufferObject);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 		}
-
 		glDeleteVertexArrays(1, &vertexArrayObj);
 		glDeleteBuffers(1, &vertexBufferObject);
+		glDeleteBuffers(1, &elementBufferObj);
+
 		glDeleteProgram(shaderProgram);
 
 		glfwDestroyWindow(window);
