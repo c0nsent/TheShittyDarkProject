@@ -14,7 +14,8 @@ namespace glow
 	public:
 		enum class Type;
 
-		explicit Shader(Type type, const char * source) noexcept;
+		Shader(Type type, const char * path);
+
 		Shader() = delete;
 		Shader(const Shader&) = delete;
 		Shader(Shader&&) = delete;

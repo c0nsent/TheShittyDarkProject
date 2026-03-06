@@ -1,5 +1,9 @@
 #include "shader.hpp"
 
+#include <fstream>
+#include <sstream>
+#include <string>
+
 namespace glow
 {
 	auto Shader::get(const Info info) const noexcept-> i32
@@ -11,10 +15,16 @@ namespace glow
 	}
 
 
-	Shader::Shader(const Type type, const char *source) noexcept
+	Shader::Shader(const Type type, const char *path)
 		: m_shaderId{glCreateShader(static_cast<u32>(type))}
 	{
-		glShaderSource(m_shaderId, 1, &source, nullptr);
+		std::ifstream file{path};
+		std::ostringstream oss;
+		oss << file.rdbuf();
+		const std::string srcString{oss.str()};
+		const char *src{srcString.c_str()};
+
+		glShaderSource(m_shaderId, 1, &src, nullptr);
 		glCompileShader(m_shaderId);
 	}
 

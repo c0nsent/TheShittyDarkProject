@@ -4,6 +4,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -111,6 +112,15 @@ void processInput(GLFWwindow *window)
 }
 
 
+auto parseShaderFile(const char* path) -> std::string
+{
+	std::ifstream file{path};
+	std::ostringstream oss;
+	oss << file.rdbuf();
+
+	return oss.str();
+}
+
 
 auto main() -> int
 {
@@ -134,7 +144,9 @@ auto main() -> int
 			}
 		)"};
 
-		const glow::Shader vertexShader{glow::Shader::Type::Vertex, vertexShaderSource};
+		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shader.vert"};
+
+		std::cerr << vertexShader.getInfoLog() << std::endl;
 
 		constexpr auto fragmentShaderSource{R"(
 			#version 460
@@ -147,7 +159,8 @@ auto main() -> int
 			}
 		)"};
 
-		const glow::Shader fragmentShader{ glow::Shader::Type::Fragment, fragmentShaderSource };
+		const glow::Shader fragmentShader{ glow::Shader::Type::Fragment, "shader.frag" };
+
 
 		const glow::ShaderProgram shaderProgram{ vertexShader, fragmentShader };
 
