@@ -14,7 +14,6 @@ find_package(glm REQUIRED)
 add_subdirectory(glow)
 
 add_executable(${PROJECT_NAME}
-		basic-type-aliases.hpp
 		main.cc
 )
 

@@ -24,7 +24,6 @@ using i64 = std::int64_t;
 
 #endif
 
-
 namespace glow
 {
 	using f16 = std::float16_t;
@@ -45,4 +44,18 @@ namespace glow
 
 	static constexpr i32 True{GL_TRUE};
 	static constexpr i32 False{GL_FALSE};
+
+	struct Color
+	{
+		f32 red;
+		f32 green;
+		f32 blue;
+		f32 alpha{1.f};
+	};
+
+
+	inline auto clearColor(const Color &background) noexcept -> void
+	{
+		glClearColor(background.red, background.green, background.blue, background.alpha);
+	}
 }

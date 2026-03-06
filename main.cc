@@ -1,12 +1,16 @@
 #include <array>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #define GLOW_BASIC_TYPES_NO_NAMESPACE
+#include "glow/core.hpp"
+#include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
 
 
@@ -106,6 +110,8 @@ void processInput(GLFWwindow *window)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+
+
 auto main() -> int
 {
 	try
@@ -129,7 +135,6 @@ auto main() -> int
 		)"};
 
 		const glow::Shader vertexShader{glow::Shader::Type::Vertex, vertexShaderSource};
-		//outputShaderCompilationStatus(vertexShader);
 
 		constexpr auto fragmentShaderSource{R"(
 			#version 460
@@ -143,35 +148,28 @@ auto main() -> int
 		)"};
 
 		const glow::Shader fragmentShader{ glow::Shader::Type::Fragment, fragmentShaderSource };
-		//outputShaderCompilationStatus(fragmentShader);
 
-		const u32 shaderProgram{glCreateProgram()};
-		glAttachShader(shaderProgram, vertexShader.getId());
-		glAttachShader(shaderProgram, fragmentShader.getId());
-		glLinkProgram(shaderProgram);
+		const glow::ShaderProgram shaderProgram{ vertexShader, fragmentShader };
 
-		glCheckError();
-
-		i32 infoLogSize{};
-		glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &infoLogSize);
-		if (infoLogSize != 0)
+		if (const std::string infoLog{shaderProgram.getInfoLog()}; not infoLog.empty())
 		{
-			char infoLog[infoLogSize];
-			glGetProgramInfoLog(shaderProgram, infoLogSize, nullptr, infoLog);
 			std::cerr << infoLog << std::endl;
 			return 1;
 		}
 
 		constexpr auto vertices{ std::to_array<f32>({
-			0.5f,  0.5f, 0.0f,
+			-0.5f,  0.25f, 0.0f,
+			0.5f, 0.25f, 0.0f,
+			0.0f, -0.75f, 0.0f,
+
+			-0.5f, -0.5f, 0.0f,
 			0.5f, -0.5f, 0.0f,
-		   -0.5f, -0.5f, 0.0f,
-		   -0.5f,  0.5f, 0.0f
+			0.f, 0.5f, 0.0f,
 		})};
 
 		constexpr auto indices{ std::to_array<u32>({
-			0, 1, 3,
-			1, 2, 3
+			0, 1, 2,
+			3, 4, 5
 		})};
 
 		u32 vertexBufferObject, vertexArrayObj, elementBufferObj;
@@ -199,10 +197,10 @@ auto main() -> int
 		{
 			processInput(window);
 
-			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+			glow::clearColor({0.2f, 0.3f, 0.3f});
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			glUseProgram(shaderProgram);
+			shaderProgram.use();
 			glBindVertexArray(vertexBufferObject);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -210,11 +208,10 @@ auto main() -> int
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 		}
+
 		glDeleteVertexArrays(1, &vertexArrayObj);
 		glDeleteBuffers(1, &vertexBufferObject);
 		glDeleteBuffers(1, &elementBufferObj);
-
-		glDeleteProgram(shaderProgram);
 
 		glfwDestroyWindow(window);
 		glfwTerminate();

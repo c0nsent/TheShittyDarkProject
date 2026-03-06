@@ -10,6 +10,7 @@ add_library( glow SHARED
 		core.hpp
 		shader.cc shader.hpp
 		shader-program.cc shader-program.hpp
+		buffer.cc buffer.hpp
 )
 
 add_subdirectory(glad)
