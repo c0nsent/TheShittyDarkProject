@@ -6,15 +6,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "basic-type-aliases.hpp"
-#include "openglpp.hpp"
+#define GLOW_BASIC_TYPES_NO_NAMESPACE
+#include "glow/shader.hpp"
 
-using namespace sdp;
 
 constexpr i32 WIDTH{800};
 constexpr i32 HEIGHT{600};
 constexpr auto TITLE{"The Shitty Dark Project"};
-
 
 
 auto glCheckError_(const char *file, const i32 line) -> GLenum
@@ -108,48 +106,6 @@ void processInput(GLFWwindow *window)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-void outputShaderCompilationStatus(const u32 shaderId)
-{
-	i32 infoLogLength{0};
-	glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
-
-	if (infoLogLength == 0) return;
-
-	std::string shaderTypeName{};
-	i32 shaderType{0};
-	glGetShaderiv(shaderId, GL_SHADER_TYPE, &shaderType);
-
-	switch(shaderType)
-	{
-		case GL_VERTEX_SHADER:
-			shaderTypeName = "Vertex";
-			break;
-		case GL_FRAGMENT_SHADER:
-			shaderTypeName = "Fragment";
-			break;
-		case GL_GEOMETRY_SHADER:
-			shaderTypeName = "Geometry";
-			break;
-		default:
-			shaderTypeName = "Unknown";
-	}
-
-	char infoLog[infoLogLength];
-	glGetShaderInfoLog(shaderId, infoLogLength, nullptr, infoLog);
-		std::cerr << infoLog << std::endl;
-		throw std::runtime_error{shaderTypeName + " shader compilation failed"};
-}
-
-
-[[nodiscard]] auto createShader(const gl::Shader::Type type, const char * source) -> u32
-{
-	const u32 vertexShader{glCreateShader(static_cast<u32>(type))};
-	glShaderSource(vertexShader, 1, &source, nullptr);
-	glCompileShader(vertexShader);
-
-	return vertexShader;
-}
-
 auto main() -> int
 {
 	try
@@ -172,8 +128,8 @@ auto main() -> int
 			}
 		)"};
 
-		const u32 vertexShader{ createShader(gl::Shader::Type::Vertex, vertexShaderSource) };
-		outputShaderCompilationStatus(vertexShader);
+		const glow::Shader vertexShader{glow::Shader::Type::Vertex, vertexShaderSource};
+		//outputShaderCompilationStatus(vertexShader);
 
 		constexpr auto fragmentShaderSource{R"(
 			#version 460
@@ -186,18 +142,15 @@ auto main() -> int
 			}
 		)"};
 
-		const u32 fragmentShader{ createShader(gl::Shader::Type::Fragment, fragmentShaderSource) };
-		outputShaderCompilationStatus(fragmentShader);
+		const glow::Shader fragmentShader{ glow::Shader::Type::Fragment, fragmentShaderSource };
+		//outputShaderCompilationStatus(fragmentShader);
 
 		const u32 shaderProgram{glCreateProgram()};
-		glAttachShader(shaderProgram, vertexShader);
-		glAttachShader(shaderProgram, fragmentShader);
+		glAttachShader(shaderProgram, vertexShader.getId());
+		glAttachShader(shaderProgram, fragmentShader.getId());
 		glLinkProgram(shaderProgram);
 
 		glCheckError();
-
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
 
 		i32 infoLogSize{};
 		glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &infoLogSize);
