@@ -1,5 +1,6 @@
 #include "shader-program.hpp"
 
+#include <glad/glad.h>
 
 namespace glow
 {
@@ -8,6 +9,22 @@ namespace glow
 		i32 returnValue{};
 		glGetProgramiv(m_id, static_cast<u32>(info), &returnValue);
 		return returnValue;
+	}
+
+
+	ShaderProgram::ShaderProgram()
+		: m_id{glCreateProgram()}
+	{
+	}
+
+
+	bool ShaderProgram::createShader(const Shader::Type type, const char *path)
+	{
+		if (m_shaders.contains(type)) return false;
+
+		//std::pair pair{type, Shader{type, path}};
+
+		m_shaders.emplace(std::pair{type, Shader{}});
 	}
 
 
@@ -26,15 +43,26 @@ namespace glow
 	}
 
 
-	auto ShaderProgram::isLinkSuccessful() const noexcept -> bool
+	auto ShaderProgram::isLinked() const noexcept -> bool
 	{
 		return get(Info::LinkStatus);
 	}
 
 
+	auto ShaderProgram::getLogLength() const noexcept -> isize
+	{
+		return get(Info::InfoLogLength);
+	}
+
+
+	auto ShaderProgram::hasShader(Shader::Type type) const noexcept -> bool
+	{
+	}
+
+
 	auto ShaderProgram::getInfoLog() const -> std::string
 	{
-		const u32 infoLogLength{static_cast<u32>(get(Info::InfoLogLength))};
+		const auto infoLogLength{getLogLength()};
 
 		if (infoLogLength == 0) return {};
 

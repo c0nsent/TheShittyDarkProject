@@ -5,27 +5,30 @@
 #include "core.hpp"
 #include "shader.hpp"
 
+#include <initializer_list>
+
 namespace glow
 {
-
 	class ShaderProgram
 	{
 		enum class Info;
 
 		[[nodiscard]] auto get(Info info) const noexcept -> i32;
 
-		public:
+	public:
 
-		ShaderProgram(const Shader &vertex, const Shader &fragment);
+		ShaderProgram(std::initializer_list<Shader> &&shaders) noexcept;
 
-		ShaderProgram() = delete;
 		ShaderProgram(const ShaderProgram &) = delete;
 		ShaderProgram(ShaderProgram &&) = delete;
 		ShaderProgram &operator=(const ShaderProgram &) = delete;
 
 		[[nodiscard]] auto getId() const noexcept -> u32;
-		[[nodiscard]] auto isLinkSuccessful() const noexcept -> bool;
+		[[nodiscard]] auto isLinked() const noexcept -> bool;
+		[[nodiscard]] auto getLogLength() const noexcept -> isize;
 		[[nodiscard]] auto getInfoLog() const -> std::string;
+		[[nodiscard]] auto hasShader() const noexcept -> bool;
+		[[nodiscard]] auto hasShader(Shader::Type type) const noexcept-> bool;
 
 		auto use() const noexcept -> void;
 

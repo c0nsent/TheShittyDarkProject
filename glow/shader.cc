@@ -1,5 +1,7 @@
 #include "shader.hpp"
 
+#include <glad/glad.h>
+
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -9,14 +11,14 @@ namespace glow
 	auto Shader::get(const Info info) const noexcept-> i32
 	{
 		i32 returnValue{0};
-		glGetShaderiv(m_shaderId, static_cast<u32>(info), &returnValue);
+		glGetShaderiv(m_id, static_cast<u32>(info), &returnValue);
 
 		return returnValue;
 	}
 
 
 	Shader::Shader(const Type type, const char *path)
-		: m_shaderId{glCreateShader(static_cast<u32>(type))}
+		: m_id{glCreateShader(static_cast<u32>(type))}
 	{
 		std::ifstream file{path};
 		std::ostringstream oss;
@@ -24,8 +26,8 @@ namespace glow
 		const std::string srcString{oss.str()};
 		const char *src{srcString.c_str()};
 
-		glShaderSource(m_shaderId, 1, &src, nullptr);
-		glCompileShader(m_shaderId);
+		glShaderSource(m_id, 1, &src, nullptr);
+		glCompileShader(m_id);
 	}
 
 
@@ -41,13 +43,13 @@ namespace glow
 	}
 
 
-	auto Shader::isCompilationSuccessful() const noexcept -> bool
+	auto Shader::isCompiled() const noexcept -> bool
 	{
 		return get(Info::CompileStatus);
 	}
 
 
-	auto Shader::getInfoLogLength() const noexcept -> u32
+	auto Shader::getInfoLogLength() const noexcept -> isize
 	{
 		return get(Info::InfoLogLength);
 	}
@@ -61,24 +63,43 @@ namespace glow
 
 	auto Shader::getId() const noexcept -> u32
 	{
-		return m_shaderId;
+		return m_id;
 	}
 
 
 	auto Shader::getInfoLog() const -> std::string
 	{
-		const u32 infoLogLength{getInfoLogLength()};
+		const isize infoLogLength{getInfoLogLength()};
 
 		if (infoLogLength == 0) return {};
 
 		char infoLog[infoLogLength];
-		glGetShaderInfoLog(m_shaderId, infoLogLength, nullptr, infoLog);
+		glGetShaderInfoLog(m_id, infoLogLength, nullptr, infoLog);
 		return infoLog;
 	}
 
 
-	Shader::~Shader()
+	auto Shader::deleteShader() const noexcept -> void
 	{
-		glDeleteShader(m_shaderId);
+		glDeleteShader(m_id);
+	}
+
+
+	auto Shader::compile(Type type, const char *path) -> void
+	{
+		if (m_status == Status::Compiled) return;
+
+		m_id = glCreateShader(static_cast<i32>(type));
+
+		std::ifstream file{path};
+		std::ostringstream oss;
+		oss << file.rdbuf();
+		const std::string srcString{oss.str()};
+		const char *src{srcString.c_str()};
+
+		glShaderSource(m_id, 1, &src, nullptr);
+		glCompileShader(m_id);
+
+		m_status =  isCompiled() ? Status::Compiled : Status::CompilationFailed;
 	}
 }

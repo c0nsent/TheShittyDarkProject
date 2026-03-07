@@ -1,39 +1,43 @@
 #pragma once
 
+#include "core.hpp"
+
+#include <glad/glad.h>
+
 #include <string>
 
-#include "core.hpp"
 
 namespace glow
 {
 	class Shader
 	{
 		enum class Info;
-		auto get(Info info) const noexcept -> i32;
+		[[nodiscard]] auto get(Info info) const noexcept -> i32;
 
 	public:
-		enum class Type;
 
-		Shader(Type type, const char * path);
+		enum class Type
+		{
+			Vertex = GL_VERTEX_SHADER,
+			Fragment = GL_FRAGMENT_SHADER,
+			Geometry = GL_GEOMETRY_SHADER,
+		};
 
-		Shader() = delete;
-		Shader(const Shader&) = delete;
-		Shader(Shader&&) = delete;
+		Shader(Type type, const char *path);
 
 		[[nodiscard]] auto getType() const noexcept -> Type;
 		[[nodiscard]] auto isMarkedForDeletion() const noexcept -> bool;
-		[[nodiscard]] auto isCompilationSuccessful() const noexcept -> bool;
-		[[nodiscard]] auto getInfoLogLength() const noexcept -> u32;
-		[[nodiscard]] auto getSourceLength() const noexcept -> u32;
+		[[nodiscard]] auto isCompiled() const noexcept -> bool;
+		[[nodiscard]] auto getInfoLogLength() const noexcept -> i32;
+		[[nodiscard]] auto getSourceLength() const noexcept -> usize;
 
 		[[nodiscard]] auto getId() const noexcept -> u32;
 		[[nodiscard]] auto getInfoLog() const -> std::string;
-
-		~Shader();
+		auto deleteShader() const noexcept -> void;
 
 	private:
 
-		u32 m_shaderId;
+		u32 m_id;
 	};
 
 	enum class Shader::Info
@@ -44,12 +48,4 @@ namespace glow
 		InfoLogLength = GL_INFO_LOG_LENGTH,
 		SourceLength = GL_SHADER_SOURCE_LENGTH,
 	};
-
-	enum class Shader::Type
-	{
-		Vertex = GL_VERTEX_SHADER,
-		Fragment = GL_FRAGMENT_SHADER,
-		Geometry = GL_GEOMETRY_SHADER,
-	};
-
 }

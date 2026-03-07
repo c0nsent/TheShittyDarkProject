@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <stdfloat>
 
-#include "glad/glad.h"
-
 #ifdef GLOW_BASIC_TYPES_NO_NAMESPACE
 
 using f16 = std::float16_t;
@@ -21,6 +19,8 @@ using i8 = std::int8_t;
 using i16 = std::int16_t;
 using i32 = std::int32_t;
 using i64 = std::int64_t;
+
+using usize = std::size_t;
 
 #endif
 
@@ -41,15 +41,19 @@ namespace glow
 	using i32 = std::int32_t;
 	using i64 = std::int64_t;
 
+	using usize = u32;
+	using isize = i32;
 
 	static constexpr i32 True{GL_TRUE};
 	static constexpr i32 False{GL_FALSE};
 
+	static constexpr usize SHADER_TYPE_COUNT{3};
+
 	struct Color
 	{
-		f32 red;
-		f32 green;
-		f32 blue;
+		f32 red{};
+		f32 green{};
+		f32 blue{};
 		f32 alpha{1.f};
 	};
 
