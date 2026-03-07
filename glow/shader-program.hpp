@@ -7,6 +7,7 @@
 
 #include <initializer_list>
 
+
 namespace glow
 {
 	class ShaderProgram
@@ -17,7 +18,7 @@ namespace glow
 
 	public:
 
-		ShaderProgram(std::initializer_list<Shader> &&shaders) noexcept;
+		ShaderProgram(std::initializer_list<Shader> &&shaders);
 
 		ShaderProgram(const ShaderProgram &) = delete;
 		ShaderProgram(ShaderProgram &&) = delete;

@@ -1,7 +1,10 @@
 #pragma once
 
+#include <glad/glad.h>
+
 #include <cstdint>
 #include <stdfloat>
+
 
 #ifdef GLOW_BASIC_TYPES_NO_NAMESPACE
 
@@ -44,8 +47,10 @@ namespace glow
 	using usize = u32;
 	using isize = i32;
 
-	static constexpr i32 True{GL_TRUE};
-	static constexpr i32 False{GL_FALSE};
+	using b32 = i32;
+
+	static constexpr b32 TRUE{GL_TRUE};
+	static constexpr b32 FALSE{GL_FALSE};
 
 	static constexpr usize SHADER_TYPE_COUNT{3};
 

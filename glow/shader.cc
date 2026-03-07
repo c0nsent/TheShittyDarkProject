@@ -83,23 +83,4 @@ namespace glow
 	{
 		glDeleteShader(m_id);
 	}
-
-
-	auto Shader::compile(Type type, const char *path) -> void
-	{
-		if (m_status == Status::Compiled) return;
-
-		m_id = glCreateShader(static_cast<i32>(type));
-
-		std::ifstream file{path};
-		std::ostringstream oss;
-		oss << file.rdbuf();
-		const std::string srcString{oss.str()};
-		const char *src{srcString.c_str()};
-
-		glShaderSource(m_id, 1, &src, nullptr);
-		glCompileShader(m_id);
-
-		m_status =  isCompiled() ? Status::Compiled : Status::CompilationFailed;
-	}
 }

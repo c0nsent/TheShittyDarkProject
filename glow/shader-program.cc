@@ -1,5 +1,8 @@
 #include "shader-program.hpp"
 
+#include <array>
+#include <stdexcept>
+#include <unordered_set>
 #include <glad/glad.h>
 
 namespace glow
@@ -12,27 +15,20 @@ namespace glow
 	}
 
 
-	ShaderProgram::ShaderProgram()
+	ShaderProgram::ShaderProgram(std::initializer_list<Shader> &&shaders)
 		: m_id{glCreateProgram()}
 	{
-	}
+		std::unordered_set<Shader::Type> shaderTypes;
 
+		for (const Shader shader : shaders)
+		{
+			if (shaderTypes.contains(shader.getType()))
+				throw std::runtime_error{"Error passed same type"}; //TODO: Временно
 
-	bool ShaderProgram::createShader(const Shader::Type type, const char *path)
-	{
-		if (m_shaders.contains(type)) return false;
+			shaderTypes.insert(shader.getType());
 
-		//std::pair pair{type, Shader{type, path}};
-
-		m_shaders.emplace(std::pair{type, Shader{}});
-	}
-
-
-	ShaderProgram::ShaderProgram(const Shader &vertex, const Shader &fragment)
-		: m_id{glCreateProgram()}
-	{
-		glAttachShader(m_id, vertex.getId());
-		glAttachShader(m_id, fragment.getId());
+			glAttachShader(m_id, shader.getId());
+		}
 		glLinkProgram(m_id);
 	}
 
@@ -55,11 +51,6 @@ namespace glow
 	}
 
 
-	auto ShaderProgram::hasShader(Shader::Type type) const noexcept -> bool
-	{
-	}
-
-
 	auto ShaderProgram::getInfoLog() const -> std::string
 	{
 		const auto infoLogLength{getLogLength()};
@@ -70,6 +61,29 @@ namespace glow
 		glGetProgramInfoLog(m_id, infoLogLength, nullptr, infoLog);
 
 		return infoLog;
+	}
+
+
+	auto ShaderProgram::hasShader() const noexcept -> bool
+	{
+		return get(Info::AttachedShaders) != 0;
+	}
+
+
+	auto ShaderProgram::hasShader(const Shader::Type type) const noexcept -> bool
+	{
+		std::array<u32, SHADER_TYPE_COUNT> shaders{};
+		glGetAttachedShaders(m_id, shaders.size(), nullptr, shaders.data());
+
+		for (const u32 shader : shaders)
+		{
+			b32 isRequiredType;
+			glGetShaderiv(shader, static_cast<u32>(type), &isRequiredType);
+
+			return isRequiredType;
+		}
+
+		return false;
 	}
 
 

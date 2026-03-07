@@ -2,9 +2,9 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sstream>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -134,35 +134,14 @@ auto main() -> int
 
 		glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-		constexpr auto vertexShaderSource{R"(
-			#version 460 core
-			layout (location=0) in vec3 aPos;
-
-			void main()
-			{
-				gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-			}
-		)"};
-
 		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shader.vert"};
 
 		std::cerr << vertexShader.getInfoLog() << std::endl;
 
-		constexpr auto fragmentShaderSource{R"(
-			#version 460
-
-			out vec4 FragColor;
-
-			void main()
-			{
-				FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-			}
-		)"};
-
 		const glow::Shader fragmentShader{ glow::Shader::Type::Fragment, "shader.frag" };
 
 
-		const glow::ShaderProgram shaderProgram{ vertexShader, fragmentShader };
+		const glow::ShaderProgram shaderProgram{vertexShader, fragmentShader};
 
 		if (const std::string infoLog{shaderProgram.getInfoLog()}; not infoLog.empty())
 		{
