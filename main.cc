@@ -10,7 +10,9 @@
 #include <GLFW/glfw3.h>
 
 #define GLOW_BASIC_TYPES_NO_NAMESPACE
+#include "glow/buffer.hpp"
 #include "glow/core.hpp"
+#include "glow/screen-cleaner.hpp"
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
 
@@ -182,8 +184,8 @@ auto main() -> int
 		{
 			processInput(window);
 
-			glow::clearColor({0.2f, 0.3f, 0.3f});
-			glClear(GL_COLOR_BUFFER_BIT);
+			const glow::ClearBuffer clearBuffer{std::make_tuple(glow::Color{0.2f, 0.3f, 0.3f})};
+			clearBuffer.clear();
 
 			shaderProgram.use();
 			glBindVertexArray(vertexBufferObject);

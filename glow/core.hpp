@@ -62,7 +62,6 @@ namespace glow
 		f32 alpha{1.f};
 	};
 
-
 	inline auto clearColor(const Color &background) noexcept -> void
 	{
 		glClearColor(background.red, background.green, background.blue, background.alpha);

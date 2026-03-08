@@ -6,7 +6,6 @@
 #include "shader.hpp"
 
 #include <initializer_list>
-#include <utility>
 
 
 namespace glow

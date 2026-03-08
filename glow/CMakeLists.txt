@@ -12,6 +12,7 @@ add_library( glow SHARED
 		shader-program.cc shader-program.hpp
 		buffer.cc buffer.hpp
 		loader.cc loader.hpp
+		screen-cleaner.cc screen-cleaner.hpp
 )
 
 add_subdirectory(glad)
