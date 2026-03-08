@@ -134,14 +134,7 @@ auto main() -> int
 
 		glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shader.vert"};
-
-		std::cerr << vertexShader.getInfoLog() << std::endl;
-
-		const glow::Shader fragmentShader{ glow::Shader::Type::Fragment, "shader.frag" };
-
-
-		const glow::ShaderProgram shaderProgram{vertexShader, fragmentShader};
+		const glow::ShaderProgram shaderProgram{{glow::Shader::Type::Vertex, "shader.vert"},{ glow::Shader::Type::Fragment, "shader.frag" }};
 
 		if (const std::string infoLog{shaderProgram.getInfoLog()}; not infoLog.empty())
 		{
