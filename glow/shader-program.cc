@@ -28,6 +28,7 @@ namespace glow
 			shaderTypes.insert(shader.getType());
 
 			glAttachShader(m_id, shader.getId());
+			glDeleteShader(shader.getId());
 		}
 		glLinkProgram(m_id);
 	}
@@ -90,11 +91,5 @@ namespace glow
 	auto ShaderProgram::use() const noexcept -> void
 	{
 		glUseProgram(m_id);
-	}
-
-
-	ShaderProgram::~ShaderProgram()
-	{
-		glDeleteProgram(m_id);
 	}
 }

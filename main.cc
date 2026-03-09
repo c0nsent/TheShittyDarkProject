@@ -1,67 +1,21 @@
 #include <array>
-#include <fstream>
 #include <iostream>
-#include <memory>
-#include <sstream>
 #include <stdexcept>
-#include <string>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #define GLOW_BASIC_TYPES_NO_NAMESPACE
-#include "glow/buffer.hpp"
 #include "glow/core.hpp"
 #include "glow/screen-cleaner.hpp"
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
+#include "glow/utility.hpp"
 
 
 constexpr i32 WIDTH{800};
 constexpr i32 HEIGHT{600};
 constexpr auto TITLE{"The Shitty Dark Project"};
-
-
-auto glCheckError_(const char *file, const i32 line) -> GLenum
-{
-	GLenum code{};
-
-	while((code = glGetError()) != GL_NO_ERROR)
-	{
-		std::string error;
-		switch (code)
-		{
-			case GL_INVALID_ENUM:
-				error = "INVALID_ENUM";
-				break;
-			case GL_INVALID_VALUE:
-				error = "INVALID_VALUE";
-				break;
-			case GL_INVALID_OPERATION:
-				error = "INVALID_OPERATION";
-				break;
-			case GL_STACK_OVERFLOW:
-				error = "STACK_OVERFLOW";
-				break;
-			case GL_STACK_UNDERFLOW:
-				error = "STACK_UNDERFLOW";
-				break;
-			case GL_OUT_OF_MEMORY:
-				error = "OUT_OF_MEMORY";
-				break;
-			case GL_INVALID_FRAMEBUFFER_OPERATION:
-				error = "INVALID_FRAMEBUFFER_OPERATION";
-				break;
-
-			default:
-				error = "UNKNOWN_ERROR";
-		}
-
-		std::cout << "Error " << error << " : " << line << " | " << error <<std::endl;
-	}
-	return code;
-}
-#define glCheckError() glCheckError_(__FILE__, __LINE__)
 
 auto errorCallback(const i32 error, const char *description) -> void
 {
@@ -114,16 +68,6 @@ void processInput(GLFWwindow *window)
 }
 
 
-auto parseShaderFile(const char* path) -> std::string
-{
-	std::ifstream file{path};
-	std::ostringstream oss;
-	oss << file.rdbuf();
-
-	return oss.str();
-}
-
-
 auto main() -> int
 {
 	try
@@ -136,49 +80,46 @@ auto main() -> int
 
 		glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-		const glow::ShaderProgram shaderProgram{{glow::Shader::Type::Vertex, "shader.vert"},{ glow::Shader::Type::Fragment, "shader.frag" }};
+		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shader.vert"};
+		const glow::Shader fragmentShader{glow::Shader::Type::Fragment, "shader.frag"};
 
-		if (const std::string infoLog{shaderProgram.getInfoLog()}; not infoLog.empty())
-		{
-			std::cerr << infoLog << std::endl;
-			return 1;
-		}
+		const glow::ShaderProgram shaderProgram{vertexShader, fragmentShader};
+		//const glow::ShaderProgram shaderProgram2{vertexShader, fragmentShader};
 
-		constexpr auto vertices{ std::to_array<f32>({
+		constexpr auto vertices1{ std::to_array<f32>({
 			-0.5f,  0.25f, 0.0f,
 			0.5f, 0.25f, 0.0f,
 			0.0f, -0.75f, 0.0f,
+		})};
 
+		constexpr auto vertices2{ std::to_array<f32>({
 			-0.5f, -0.5f, 0.0f,
 			0.5f, -0.5f, 0.0f,
 			0.f, 0.5f, 0.0f,
 		})};
 
-		constexpr auto indices{ std::to_array<u32>({
-			0, 1, 2,
-			3, 4, 5
-		})};
+		std::pair<u32, u32> vbo;
+		glGenBuffers(2, &vbo.first);
+		std::pair<u32, u32> vao;
+		glGenVertexArrays(2, &vao.first);
 
-		u32 vertexBufferObject, vertexArrayObj, elementBufferObj;
-		glGenVertexArrays(1, &vertexArrayObj);
-		glGenBuffers(1, &vertexBufferObject);
-		glGenBuffers(1, &elementBufferObj);
+		glBindVertexArray(vbo.first);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo.first);
+		glNamedBufferData(vbo.first, vertices1.size() * sizeof(vertices1.front()), vertices1.data(), GL_STATIC_DRAW);
 
-		glBindVertexArray(vertexArrayObj);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferObj);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices.front()), indices.data(), GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), static_cast<void *>(0));
+		glVertexAttribPointer(0, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32), static_cast<void *>(0));
 		glEnableVertexAttribArray(0);
 
+		glBindVertexArray(vbo.second);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo.second);
+		glNamedBufferData(vbo.second, vertices2.size() * sizeof(vertices2.front()), vertices2.data(), GL_STATIC_DRAW);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32), static_cast<void *>(0));
+		glEnableVertexAttribArray(0);
+
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glCheckError();
 		glBindVertexArray(0);
-		glCheckError();
 
 		while (not glfwWindowShouldClose(window))
 		{
@@ -188,17 +129,21 @@ auto main() -> int
 			clearBuffer.clear();
 
 			shaderProgram.use();
-			glBindVertexArray(vertexBufferObject);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glBindVertexArray(vbo.first);
+
+			std::cout << glow::Error::check()
+			//shaderProgram.use();
+			glBindVertexArray(vbo.second);
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
 		}
 
-		glDeleteVertexArrays(1, &vertexArrayObj);
+		/*glDeleteVertexArrays(1, &vertexArrayObj);
 		glDeleteBuffers(1, &vertexBufferObject);
-		glDeleteBuffers(1, &elementBufferObj);
+		glDeleteBuffers(1, &elementBufferObj);*/
 
 		glfwDestroyWindow(window);
 		glfwTerminate();

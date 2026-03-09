@@ -17,7 +17,7 @@ namespace glow
 
 	public:
 
-		ClearBuffer(const std::tuple<Color> &bufferValues) noexcept;
+		ClearBuffer(std::tuple<Color> &&bufferValues) noexcept;
 
 		void clear() const noexcept;
 

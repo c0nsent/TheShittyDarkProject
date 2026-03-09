@@ -33,8 +33,6 @@ namespace glow
 
 		auto use() const noexcept -> void;
 
-		~ShaderProgram();
-
 	private:
 
 		u32 m_id;
