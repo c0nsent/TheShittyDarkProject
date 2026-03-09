@@ -7,10 +7,10 @@
 
 #define GLOW_BASIC_TYPES_NO_NAMESPACE
 #include "glow/core.hpp"
+#include "glow/error.hpp"
 #include "glow/screen-cleaner.hpp"
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
-#include "glow/utility.hpp"
 
 
 constexpr i32 WIDTH{800};
@@ -131,11 +131,13 @@ auto main() -> int
 			shaderProgram.use();
 			glBindVertexArray(vbo.first);
 
-			std::cout << glow::Error::check()
+			auto foo = glow::Error::last();
+			glow::Error::print();
 			//shaderProgram.use();
 			glBindVertexArray(vbo.second);
 			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();

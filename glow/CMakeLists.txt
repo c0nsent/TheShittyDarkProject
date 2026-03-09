@@ -1,5 +1,5 @@
 project(glow
-		VERSION 0.0.1
+		VERSION 0.0.2
 		LANGUAGES CXX
 		DESCRIPTION "OpenGL Lightweight Object Wrapper"
 )
@@ -13,7 +13,7 @@ add_library( glow SHARED
 		buffer.cc buffer.hpp
 		loader.cc loader.hpp
 		screen-cleaner.cc screen-cleaner.hpp
-		utility.cc utility.hpp
+		error.cc error.hpp
 )
 
 add_subdirectory(glad)
