@@ -14,6 +14,7 @@ add_library( glow SHARED
 		loader.cc loader.hpp
 		screen-cleaner.cc screen-cleaner.hpp
 		error.cc error.hpp
+		utility.cc utility.hpp
 )
 
 add_subdirectory(glad)

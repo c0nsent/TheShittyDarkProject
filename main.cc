@@ -11,6 +11,7 @@
 #include "glow/screen-cleaner.hpp"
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
+#include "glow/utility.hpp"
 
 
 constexpr i32 WIDTH{800};
@@ -57,7 +58,7 @@ auto initGlad() -> void
 
 auto framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 height) -> void
 {
-	glViewport(0, 0, width, height);
+	glow::viewport(0, 0, width, height);
 }
 
 
@@ -80,9 +81,9 @@ auto main() -> int
 
 		glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shader1.vert"};
-		const glow::Shader fragmentShader1{glow::Shader::Type::Fragment, "shader1.frag"};
-		const glow::Shader fragmentShader2{glow::Shader::Type::Fragment, "shader2.frag"};
+		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shaders/shader1.vert"};
+		const glow::Shader fragmentShader1{glow::Shader::Type::Fragment, "shaders/shader1.frag"};
+		const glow::Shader fragmentShader2{glow::Shader::Type::Fragment, "shaders/shader2.frag"};
 
 		const glow::ShaderProgram shaderProgram1{vertexShader, fragmentShader1};
 		const glow::ShaderProgram shaderProgram2{vertexShader, fragmentShader2};
