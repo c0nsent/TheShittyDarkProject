@@ -12,6 +12,7 @@ find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
 add_subdirectory(glow)
+#add_subdirectory(iris)
 
 add_executable(${PROJECT_NAME}
 		main.cc

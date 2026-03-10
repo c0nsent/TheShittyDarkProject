@@ -13,6 +13,7 @@
 #include "glow/shader.hpp"
 #include "glow/utility.hpp"
 
+using namespace glow::basic_types;
 
 constexpr i32 WIDTH{800};
 constexpr i32 HEIGHT{600};
@@ -125,14 +126,14 @@ auto main() -> int
 		glBindBuffer(GL_ARRAY_BUFFER, vbo.first);
 		glNamedBufferData(vbo.first, vertices1.size() * sizeof(vertices1.front()), vertices1.data(), GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32), nullptr);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(f32), nullptr);
 		glEnableVertexAttribArray(0);
 
 		glBindVertexArray(vao.second);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo.second);
 		glNamedBufferData(vbo.second, vertices2.size() * sizeof(vertices2.front()), vertices2.data(), GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32),nullptr);
+		glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(f32),nullptr);
 		glEnableVertexAttribArray(0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);

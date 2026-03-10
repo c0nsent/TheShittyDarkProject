@@ -2,57 +2,32 @@
 
 #include <glad/glad.h>
 
-#include <cstdint>
-#include <stdfloat>
-
-
-#ifdef GLOW_BASIC_TYPES_NO_NAMESPACE
-
-using f16 = std::float16_t;
-using f32 = std::float32_t;
-using f64 = std::float64_t;
-using f128 = std::float128_t;
-
-using u8 = std::uint8_t;
-using u16 = std::uint16_t;
-using u32 = std::uint32_t;
-using u64 = std::uint64_t;
-
-using i8 = std::int8_t;
-using i16 = std::int16_t;
-using i32 = std::int32_t;
-using i64 = std::int64_t;
-
-using usize = std::size_t;
-
-#endif
-
 namespace glow
 {
-	using f16 = std::float16_t;
-	using f32 = std::float32_t;
-	using f64 = std::float64_t;
-	using f128 = std::float128_t;
+	namespace basic_types
+	{
+		using f16 = _Float16;
+		using f32 = _Float32;
+		using f64 = _Float64;
+		using f128 = _Float128;
 
-	using u8 = std::uint8_t;
-	using u16 = std::uint16_t;
-	using u32 = std::uint32_t;
-	using u64 = std::uint64_t;
+		using u8 = unsigned char;
+		using u16 = unsigned short int;
+		using u32 = unsigned int;
+		using u64 = unsigned long int;
 
-	using i8 = std::int8_t;
-	using i16 = std::int16_t;
-	using i32 = std::int32_t;
-	using i64 = std::int64_t;
+		using i8 = signed char;
+		using i16 = signed short int;
+		using i32 = signed int;
+		using i64 = signed long int;
 
-	using usize = u32;
-	using isize = i32;
+		using usize = u32;
+		using isize = i32;
 
-	using b32 = i32;
+		using b32 = i32;
+	}
 
-	static constexpr b32 TRUE{GL_TRUE};
-	static constexpr b32 FALSE{GL_FALSE};
-
-	static constexpr usize SHADER_TYPE_COUNT{3};
+	using namespace glow::basic_types;
 
 	struct Color
 	{
