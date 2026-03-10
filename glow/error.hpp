@@ -9,7 +9,7 @@ namespace glow
 {
 	class Error
 	{
-
+		using src_loc = std::source_location;
 	public:
 
 		enum class Code : u16
@@ -25,7 +25,8 @@ namespace glow
 		};
 
 		[[nodiscard]] static auto last() noexcept -> Code;
-		static auto print(Code code = last(), const std::source_location &loc = std::source_location::current()) -> void;
+		static auto print(Code code = last(), const src_loc &loc = src_loc::current()) -> void;
+		static auto printIfError(Code code = last(), const src_loc &loc = src_loc::current()) -> void;
 
 	private:
 

@@ -10,12 +10,18 @@ namespace glow
 	}
 
 
-	auto Error::print(const Code code, const std::source_location &loc) -> void
+	auto Error::print(const Code code, const src_loc &loc) -> void
+	{
+		std::cerr << "[ " <<  loc.file_name() << " | " << loc.function_name() << " | " << loc.line()
+				  << " ] Error : " << toString(code) << '\n';
+	}
+
+
+	auto Error::printIfError(const Code code, const src_loc &loc) -> void
 	{
 		if (code == Code::NoError) return;
 
-		std::cerr << "[ " <<  loc.file_name() << " | " << loc.function_name() << " | " << loc.line()
-				  << " ] Error : " << toString(code) << '\n';
+		print(code, loc);
 	}
 
 
@@ -23,6 +29,7 @@ namespace glow
 	{
 		switch (code)
 		{
+			case Code::NoError: return "No error";
 			case Code::InvalidEnum: return "Invalid enum";
 			case Code::InvalidValue: return "Invalid value";
 			case Code::InvalidOperation: return "Invalid operation";

@@ -80,11 +80,13 @@ auto main() -> int
 
 		glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shader.vert"};
-		const glow::Shader fragmentShader{glow::Shader::Type::Fragment, "shader.frag"};
+		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shader1.vert"};
+		const glow::Shader fragmentShader1{glow::Shader::Type::Fragment, "shader1.frag"};
+		const glow::Shader fragmentShader2{glow::Shader::Type::Fragment, "shader2.frag"};
 
-		const glow::ShaderProgram shaderProgram{vertexShader, fragmentShader};
-		//const glow::ShaderProgram shaderProgram2{vertexShader, fragmentShader};
+		const glow::ShaderProgram shaderProgram1{vertexShader, fragmentShader1};
+		const glow::ShaderProgram shaderProgram2{vertexShader, fragmentShader2};
+		glow::Error::printIfError();
 
 		constexpr auto vertices1{ std::to_array<f32>({
 			-0.5f,  0.25f, 0.0f,
@@ -103,20 +105,19 @@ auto main() -> int
 		std::pair<u32, u32> vao;
 		glGenVertexArrays(2, &vao.first);
 
-		glBindVertexArray(vbo.first);
+		glBindVertexArray(vao.first);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo.first);
 		glNamedBufferData(vbo.first, vertices1.size() * sizeof(vertices1.front()), vertices1.data(), GL_STATIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32), static_cast<void *>(0));
 		glEnableVertexAttribArray(0);
 
-		glBindVertexArray(vbo.second);
+		glBindVertexArray(vao.second);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo.second);
 		glNamedBufferData(vbo.second, vertices2.size() * sizeof(vertices2.front()), vertices2.data(), GL_STATIC_DRAW);
 
-		glVertexAttribPointer(1, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32), static_cast<void *>(0));
+		glVertexAttribPointer(0, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32), static_cast<void *>(0));
 		glEnableVertexAttribArray(0);
-
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -128,16 +129,15 @@ auto main() -> int
 			const glow::ClearBuffer clearBuffer{std::make_tuple(glow::Color{0.2f, 0.3f, 0.3f})};
 			clearBuffer.clear();
 
-			shaderProgram.use();
-			glBindVertexArray(vbo.first);
-
-			auto foo = glow::Error::last();
+			shaderProgram1.use();
+			glBindVertexArray(vao.first);
 			glow::Error::print();
-			//shaderProgram.use();
-			glBindVertexArray(vbo.second);
-			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
 
+			shaderProgram2.use();
+			glBindVertexArray(vao.second);
+			glow::Error::print();
+			glDrawArrays(GL_TRIANGLES, 0, 3);
 
 			glfwSwapBuffers(window);
 			glfwPollEvents();
