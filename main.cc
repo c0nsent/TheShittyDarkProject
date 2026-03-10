@@ -81,12 +81,27 @@ auto main() -> int
 
 		glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
+		/*
+		i32 maxAttributesCount;
+		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttributesCount);
+
+		std::cout << "Max vertex attributes count: " << maxAttributesCount << std::endl;
+		*/
+
+
 		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shaders/shader1.vert"};
+		if (vertexShader.isCompiled())
+			std::cerr << "vertexShader compiled!" << std::endl;
+		std::cerr << "vertexShader.vert: " << vertexShader.getInfoLog() << '\n';
 		const glow::Shader fragmentShader1{glow::Shader::Type::Fragment, "shaders/shader1.frag"};
-		const glow::Shader fragmentShader2{glow::Shader::Type::Fragment, "shaders/shader2.frag"};
+		if (vertexShader.isCompiled())
+			std::cerr << "fragmentShader compiled!" << std::endl;
+		std::cerr << "vertexShader.frag: " << fragmentShader1.getInfoLog() << '\n';
+		//const glow::Shader fragmentShader2{glow::Shader::Type::Fragment, "shaders/shader2.frag"};
 
 		const glow::ShaderProgram shaderProgram1{vertexShader, fragmentShader1};
-		const glow::ShaderProgram shaderProgram2{vertexShader, fragmentShader2};
+		if (shaderProgram1.isLinked())
+			std::cerr << "shader program is linked successfully" << '\n';
 		glow::Error::printIfError();
 
 		constexpr auto vertices1{ std::to_array<f32>({
@@ -110,14 +125,14 @@ auto main() -> int
 		glBindBuffer(GL_ARRAY_BUFFER, vbo.first);
 		glNamedBufferData(vbo.first, vertices1.size() * sizeof(vertices1.front()), vertices1.data(), GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32), static_cast<void *>(0));
+		glVertexAttribPointer(0, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32), nullptr);
 		glEnableVertexAttribArray(0);
 
 		glBindVertexArray(vao.second);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo.second);
 		glNamedBufferData(vbo.second, vertices2.size() * sizeof(vertices2.front()), vertices2.data(), GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32), static_cast<void *>(0));
+		glVertexAttribPointer(0, 3, GL_FLOAT, glow::FALSE, 3 * sizeof(f32),nullptr);
 		glEnableVertexAttribArray(0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -131,11 +146,14 @@ auto main() -> int
 			clearBuffer.clear();
 
 			shaderProgram1.use();
+
+
 			glBindVertexArray(vao.first);
 			glow::Error::print();
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 
-			shaderProgram2.use();
+			shaderProgram1.use();
+
 			glBindVertexArray(vao.second);
 			glow::Error::print();
 			glDrawArrays(GL_TRIANGLES, 0, 3);
