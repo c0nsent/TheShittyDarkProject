@@ -1,17 +1,18 @@
 #include <array>
+#include <expected>
 #include <iostream>
 #include <stdexcept>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#define GLOW_BASIC_TYPES_NO_NAMESPACE
 #include "glow/core.hpp"
 #include "glow/error.hpp"
 #include "glow/screen-cleaner.hpp"
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
 #include "glow/utility.hpp"
+
 
 using namespace glow::basic_types;
 
@@ -38,22 +39,16 @@ auto initGlfw(const i32 openglMajorVersion, const i32 openglMinorVersion, const 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, profile);
 }
 
-[[nodiscard]] auto createWindow(const i32 width, const i32 height, const char *title ) ->  GLFWwindow *
+[[nodiscard]] auto createWindow(const i32 width, const i32 height, const char *title ) noexcept
+	-> std::expected<GLFWwindow *, const char *>
 {
 	auto window{glfwCreateWindow(width, height, title, nullptr, nullptr)};
 	if (not window)
-		throw std::runtime_error("Failed to create GLFW window.");
+		return std::unexpected{"Failed to create GLFW window."};
 
 	glfwMakeContextCurrent(window);
 
 	return window;
-}
-
-
-auto initGlad() -> void
-{
-	if (not gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
-		throw std::runtime_error("Failed to initialize GLAD.");
 }
 
 
@@ -76,34 +71,28 @@ auto main() -> int
 	{
 		initGlfw(4, 6, true);
 
-		auto window{createWindow(WIDTH, HEIGHT, TITLE)};
+		GLFWwindow *window;
 
-		initGlad();
+		if (auto expected{createWindow(WIDTH, HEIGHT, TITLE)}; expected.has_value())
+			window = expected.value();
+		else
+		{
+			std::cerr << "Error: " << expected.error() << '\n';
+			return 1;
+		}
+
+		if (not gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+		{
+			std::cerr << "Failed to initialize GLAD." << '\n';
+			return 1;
+		}
 
 		glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-		/*
-		i32 maxAttributesCount;
-		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttributesCount);
-
-		std::cout << "Max vertex attributes count: " << maxAttributesCount << std::endl;
-		*/
-
-
 		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shaders/shader1.vert"};
-		if (vertexShader.isCompiled())
-			std::cerr << "vertexShader compiled!" << std::endl;
-		std::cerr << "vertexShader.vert: " << vertexShader.getInfoLog() << '\n';
 		const glow::Shader fragmentShader1{glow::Shader::Type::Fragment, "shaders/shader1.frag"};
-		if (vertexShader.isCompiled())
-			std::cerr << "fragmentShader compiled!" << std::endl;
-		std::cerr << "vertexShader.frag: " << fragmentShader1.getInfoLog() << '\n';
-		//const glow::Shader fragmentShader2{glow::Shader::Type::Fragment, "shaders/shader2.frag"};
 
 		const glow::ShaderProgram shaderProgram1{vertexShader, fragmentShader1};
-		if (shaderProgram1.isLinked())
-			std::cerr << "shader program is linked successfully" << '\n';
-		glow::Error::printIfError();
 
 		constexpr auto vertices1{ std::to_array<f32>({
 			-0.5f,  0.25f, 0.0f,
