@@ -21,4 +21,5 @@ add_subdirectory(glad)
 
 target_link_libraries(glow PUBLIC
 		glad
+		Boost::headers
 )

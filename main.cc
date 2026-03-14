@@ -1,10 +1,9 @@
 #include <array>
-#include <expected>
 #include <iostream>
-#include <stdexcept>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include "glow/core.hpp"
 #include "glow/error.hpp"
@@ -25,32 +24,6 @@ auto errorCallback(const i32 error, const char *description) -> void
 	std::cerr << "Error: " << error << " " << description << std::endl;
 }
 
-auto initGlfw(const i32 openglMajorVersion, const i32 openglMinorVersion, const bool isCoreProfile) -> void
-{
-	glfwSetErrorCallback(errorCallback);
-
-	if (not glfwInit())
-		throw std::runtime_error("GLFW could not be initialized");
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, openglMajorVersion);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, openglMinorVersion);
-
-	const i32 profile{isCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE};
-	glfwWindowHint(GLFW_OPENGL_PROFILE, profile);
-}
-
-[[nodiscard]] auto createWindow(const i32 width, const i32 height, const char *title ) noexcept
-	-> std::expected<GLFWwindow *, const char *>
-{
-	auto window{glfwCreateWindow(width, height, title, nullptr, nullptr)};
-	if (not window)
-		return std::unexpected{"Failed to create GLFW window."};
-
-	glfwMakeContextCurrent(window);
-
-	return window;
-}
-
 
 auto framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 height) -> void
 {
@@ -58,7 +31,7 @@ auto framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 heig
 }
 
 
-void processInput(GLFWwindow *window)
+auto processInput(GLFWwindow *window) -> void
 {
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -67,101 +40,92 @@ void processInput(GLFWwindow *window)
 
 auto main() -> int
 {
-	try
+	glfwSetErrorCallback(errorCallback);
+
+	if (not glfwInit())
 	{
-		initGlfw(4, 6, true);
-
-		GLFWwindow *window;
-
-		if (auto expected{createWindow(WIDTH, HEIGHT, TITLE)}; expected.has_value())
-			window = expected.value();
-		else
-		{
-			std::cerr << "Error: " << expected.error() << '\n';
-			return 1;
-		}
-
-		if (not gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
-		{
-			std::cerr << "Failed to initialize GLAD." << '\n';
-			return 1;
-		}
-
-		glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
-
-		const glow::Shader vertexShader{glow::Shader::Type::Vertex, "shaders/shader1.vert"};
-		const glow::Shader fragmentShader1{glow::Shader::Type::Fragment, "shaders/shader1.frag"};
-
-		const glow::ShaderProgram shaderProgram1{vertexShader, fragmentShader1};
-
-		constexpr auto vertices1{ std::to_array<f32>({
-			-0.5f,  0.25f, 0.0f,
-			0.5f, 0.25f, 0.0f,
-			0.0f, -0.75f, 0.0f,
-		})};
-
-		constexpr auto vertices2{ std::to_array<f32>({
-			-0.5f, -0.5f, 0.0f,
-			0.5f, -0.5f, 0.0f,
-			0.f, 0.5f, 0.0f,
-		})};
-
-		std::pair<u32, u32> vbo;
-		glGenBuffers(2, &vbo.first);
-		std::pair<u32, u32> vao;
-		glGenVertexArrays(2, &vao.first);
-
-		glBindVertexArray(vao.first);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo.first);
-		glNamedBufferData(vbo.first, vertices1.size() * sizeof(vertices1.front()), vertices1.data(), GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(f32), nullptr);
-		glEnableVertexAttribArray(0);
-
-		glBindVertexArray(vao.second);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo.second);
-		glNamedBufferData(vbo.second, vertices2.size() * sizeof(vertices2.front()), vertices2.data(), GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(f32),nullptr);
-		glEnableVertexAttribArray(0);
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-
-		while (not glfwWindowShouldClose(window))
-		{
-			processInput(window);
-
-			const glow::ClearBuffer clearBuffer{std::make_tuple(glow::Color{0.2f, 0.3f, 0.3f})};
-			clearBuffer.clear();
-
-			shaderProgram1.use();
-
-
-			glBindVertexArray(vao.first);
-			glow::Error::print();
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-
-			shaderProgram1.use();
-
-			glBindVertexArray(vao.second);
-			glow::Error::print();
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-
-			glfwSwapBuffers(window);
-			glfwPollEvents();
-		}
-
-		/*glDeleteVertexArrays(1, &vertexArrayObj);
-		glDeleteBuffers(1, &vertexBufferObject);
-		glDeleteBuffers(1, &elementBufferObj);*/
-
-		glfwDestroyWindow(window);
-		glfwTerminate();
-	}
-	catch (const std::runtime_error& e)
-	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Failed to initialize GLFW\n";
 		return 1;
 	}
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	GLFWwindow *window{glfwCreateWindow(WIDTH, HEIGHT, TITLE, nullptr, nullptr)};
+	if (window == nullptr)
+	{
+		std::cerr << "Failed to create window\n";
+		glfwTerminate();
+		return 1;
+	}
+
+	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+
+	if (not gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+	{
+		std::cerr << "Failed to initialize GLAD.\n";
+		return 1;
+	}
+
+	const glow::ShaderProgram shaderProgram{
+		{glow::Shader::Type::Vertex, "shaders/shader.vert"},
+		{glow::Shader::Type::Fragment, "shaders/shader.frag"}
+	};
+
+	if (not shaderProgram.isLinked())
+	{
+		std::cerr << shaderProgram.getInfoLog();
+		return 1;
+	}
+
+
+	constexpr auto vertices{ std::to_array<f32>({
+		-0.5f,  0.25f, 0.0f,
+		0.5f, 0.25f, 0.0f,
+		0.0f, -0.75f, 0.0f,
+	})};
+
+	u32 vbo;
+	glGenBuffers(1, &vbo);
+	u32 vao;
+	glGenVertexArrays(1, &vao);
+
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glNamedBufferData(vbo, vertices.size() * sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(f32), nullptr);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	while (not glfwWindowShouldClose(window))
+	{
+		processInput(window);
+
+		const glow::ClearBuffer clearBuffer{std::make_tuple(glow::Color{0.2f, 0.3f, 0.3f})};
+		clearBuffer.clear();
+
+		const f32 greenValue{static_cast<f32>(glm::sin(glfwGetTime()) / 2.f + 0.5f)};
+		const i32 vertexColor{glGetUniformLocation(shaderProgram.getId(), "ourColor")};
+		shaderProgram.use();
+		glUniform4f(vertexColor, 0.f, greenValue, 0.f, 1.f);
+
+		glBindVertexArray(vao);
+		glow::Error::print();
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	/*glDeleteVertexArrays(1, &vertexArrayObj);
+	glDeleteBuffers(1, &vertexBufferObject);
+	glDeleteBuffers(1, &elementBufferObj);*/
+
+	glfwDestroyWindow(window);
+	glfwTerminate();
 }

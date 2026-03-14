@@ -1,5 +1,6 @@
 project(glad
 		LANGUAGES C
+		VERSION 4.6
 )
 
 add_library(glad SHARED)

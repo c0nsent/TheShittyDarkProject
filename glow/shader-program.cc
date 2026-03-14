@@ -1,7 +1,7 @@
 #include "shader-program.hpp"
 
 #include <array>
-#include <stdexcept>
+
 #include <unordered_set>
 #include <glad/glad.h>
 
@@ -15,9 +15,22 @@ namespace glow
 	}
 
 
+	auto ShaderProgram::getShaderTypeIndex(const Shader::Type type) noexcept -> size_t
+	{
+		switch(type)
+		{
+			case Shader::Type::Vertex: return 0;
+			case Shader::Type::Fragment: return 1;
+			case Shader::Type::Geometry: return 2;
+			default: return SHADER_TYPE_COUNT;
+		}
+	}
+
+
 	ShaderProgram::ShaderProgram(std::initializer_list<Shader> &&shaders)
 		: m_id{glCreateProgram()}
 	{
+		/*
 		std::unordered_set<Shader::Type> shaderTypes;
 
 		for (const Shader shader : shaders)
@@ -28,8 +41,16 @@ namespace glow
 			shaderTypes.insert(shader.getType());
 
 			glAttachShader(m_id, shader.getId());
-			glDeleteShader(shader.getId());
+		}*/
+
+		for (const Shader shader : shaders)
+		{
+			if (m_shaders.contains(shader.getType()))
+			{
+				m_shaders[shader.getType()] = shader;
+			}
 		}
+
 		glLinkProgram(m_id);
 	}
 
@@ -85,6 +106,12 @@ namespace glow
 		}
 
 		return false;
+	}
+
+
+	auto ShaderProgram::getShader(Shader::Type type) const noexcept -> const Shader &
+	{
+
 	}
 
 

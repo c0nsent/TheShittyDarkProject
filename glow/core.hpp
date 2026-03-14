@@ -2,10 +2,15 @@
 
 #include <glad/glad.h>
 
+#include <expected>
+#include <boost/optional.hpp>
+
+
 namespace glow
 {
 	namespace basic_types
 	{
+
 		using f16 = _Float16;
 		using f32 = _Float32;
 		using f64 = _Float64;
@@ -25,9 +30,18 @@ namespace glow
 		using isize = i32;
 
 		using b32 = i32;
+
+
+		template <typename T>
+		using result = std::expected<T, const char *>;
+
+		template <typename T>
+		using opt = boost::optional<T>;
 	}
 
 	using namespace glow::basic_types;
+
+	static constexpr usize SHADER_TYPE_COUNT{3};
 
 	struct Color
 	{

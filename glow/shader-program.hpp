@@ -6,7 +6,8 @@
 #include "shader.hpp"
 
 #include <initializer_list>
-
+#include <boost/container/small_vector.hpp>
+#include <boost/unordered/unordered_flat_map.hpp>
 
 namespace glow
 {
@@ -15,6 +16,7 @@ namespace glow
 		enum class Info;
 
 		[[nodiscard]] auto get(Info info) const noexcept -> i32;
+		[[nodiscard]] static auto getShaderTypeIndex(Shader::Type type) noexcept -> size_t;
 
 	public:
 
@@ -30,11 +32,13 @@ namespace glow
 		[[nodiscard]] auto getInfoLog() const -> std::string;
 		[[nodiscard]] auto hasShader() const noexcept -> bool;
 		[[nodiscard]] auto hasShader(Shader::Type type) const noexcept-> bool;
+		[[nodiscard]] auto getShader(Shader::Type type) const noexcept -> const Shader &;
 
 		auto use() const noexcept -> void;
 
 	private:
 
+		boost::unordered::unordered_flat_map<Shader::Type, Shader> m_shaders;
 		u32 m_id;
 	};
 
