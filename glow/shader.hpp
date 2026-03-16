@@ -4,52 +4,90 @@
 
 #include <glad/glad.h>
 
+#include <optional>
+#include <string>
 
-//TODO: Можно использовать swap идиому чтобы не приходилось городить огромный конструкт для определения шейдера
 
 namespace glow
 {
-	class Shader
+	namespace detail
 	{
-		enum class Info : u16;
-		[[nodiscard]] auto get(Info info) const noexcept -> i32;
+		class BaseShader
+		{
+		protected:
 
+			enum class InfoType : u16
+			{
+				Type = GL_SHADER_TYPE,
+				DeleteStatus = GL_DELETE_STATUS,
+				CompileStatus = GL_COMPILE_STATUS,
+				InfoLogLength = GL_INFO_LOG_LENGTH,
+				SourceLength = GL_SHADER_SOURCE_LENGTH,
+			};
+
+			enum class ShaderType : u16
+			{
+				Vertex = GL_VERTEX_SHADER,
+				Fragment = GL_FRAGMENT_SHADER,
+				Geometry = GL_GEOMETRY_SHADER,
+			};
+
+			static constexpr u32 NONE{0};
+
+			[[nodiscard]] auto get(InfoType info) const noexcept -> i32;
+
+			 auto compile(const char *path) const -> void;
+
+		public:
+
+			[[nodiscard]] auto isMarkedForDeletion() const noexcept -> bool;
+			[[nodiscard]] auto isCompiled() const noexcept -> bool;
+			[[nodiscard]] auto getInfoLogLength() const noexcept -> isize;
+			[[nodiscard]] auto getSourceLength() const noexcept -> usize;
+
+			[[nodiscard]] auto isExists() const noexcept -> bool;
+			[[nodiscard]] auto getId() const noexcept -> u32;
+			[[nodiscard]] auto getInfoLog() const -> std::optional<std::string>;
+			auto deleteShader() const noexcept -> void;
+
+			BaseShader(BaseShader &&rhs) noexcept;
+			auto operator=(BaseShader &&rhs) noexcept -> BaseShader &;
+
+			~BaseShader();
+
+			BaseShader(const BaseShader &) = delete;
+			BaseShader &operator=(const BaseShader &) = delete;
+
+		protected:
+
+			BaseShader() = default;
+			explicit BaseShader(ShaderType type) noexcept;
+
+			u32 m_id;
+		};
+	}
+
+
+	class VertexShader final : public detail::BaseShader
+	{
 	public:
 
-		enum class Type : u16;
-
-		Shader();
-		Shader(Type type, const char *path);
-
-		[[nodiscard]] auto getType() const noexcept -> Type;
-		[[nodiscard]] auto isMarkedForDeletion() const noexcept -> bool;
-		[[nodiscard]] auto isCompiled() const noexcept -> bool;
-		[[nodiscard]] auto getInfoLogLength() const noexcept -> isize;
-		[[nodiscard]] auto getSourceLength() const noexcept -> usize;
-
-		[[nodiscard]] auto getId() const noexcept -> u32;
-		[[nodiscard]] auto getInfoLog() const -> opt<std::string>;
-		auto deleteShader() const noexcept -> void;
-
-	private:
-
-		Type m_type;
-		u32 m_id;
+		explicit VertexShader(const char *srcPath);
 	};
 
-	enum class Shader::Type : u16
+
+	class FragmentShader final : public detail::BaseShader
 	{
-		Fragment = GL_FRAGMENT_SHADER,
-		Vertex = GL_VERTEX_SHADER,
-		Geometry = GL_GEOMETRY_SHADER,
+	public:
+
+		explicit FragmentShader(const char *srcPath);
 	};
 
-	enum class Shader::Info : u16
+
+	class GeometryShader final : public detail::BaseShader
 	{
-		Type = GL_SHADER_TYPE,
-		DeleteStatus = GL_DELETE_STATUS,
-		CompileStatus = GL_COMPILE_STATUS,
-		InfoLogLength = GL_INFO_LOG_LENGTH,
-		SourceLength = GL_SHADER_SOURCE_LENGTH,
+	public:
+
+		explicit GeometryShader(const char *srcPath);
 	};
 }

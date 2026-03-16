@@ -3,7 +3,6 @@
 #include <glad/glad.h>
 
 #include <expected>
-#include <boost/optional.hpp>
 
 
 namespace glow
@@ -31,12 +30,8 @@ namespace glow
 
 		using b32 = i32;
 
-
-		template <typename T>
-		using result = std::expected<T, const char *>;
-
-		template <typename T>
-		using opt = boost::optional<T>;
+		template <class T, class U>
+		using Result = std::expected<T, U>;
 	}
 
 	using namespace glow::basic_types;

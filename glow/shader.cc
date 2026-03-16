@@ -4,90 +4,143 @@
 
 #include <fstream>
 #include <sstream>
-#include <string>
+#include <utility>
 
 namespace glow
 {
-	auto Shader::get(const Info info) const noexcept-> i32
+	namespace detail
 	{
-		i32 returnValue{0};
-		glGetShaderiv(m_id, static_cast<u32>(info), &returnValue);
+		auto BaseShader::get(const InfoType info) const noexcept -> i32
+		{
+			i32 requested;
+			glGetShaderiv(m_id, std::to_underlying(info), &requested);
 
-		return returnValue;
+			return requested;
+		}
+
+
+		auto BaseShader::compile(const char *path) const -> void
+		{
+			std::ifstream file{path};
+
+			if (not file.is_open())
+				throw std::runtime_error{std::string{"Cannot open shader source file by path: "} + path};
+
+			std::ostringstream oss;
+			oss << file.rdbuf();
+			const std::string src{oss.str()};
+			auto cSrc{src.c_str()};
+
+			glShaderSource(m_id, 1, &cSrc,  nullptr);
+			glCompileShader(m_id);
+
+			if (isCompiled()) return;
+
+			auto log{getInfoLog().value_or("No log")};
+			throw std::runtime_error{"Shader compilation failed: " + std::move(log)};
+		}
+
+
+		auto BaseShader::isMarkedForDeletion() const noexcept -> bool
+		{
+			return get(InfoType::DeleteStatus);
+		}
+
+
+		auto BaseShader::isCompiled() const noexcept -> bool
+		{
+			return get(InfoType::CompileStatus);
+		}
+
+
+		auto BaseShader::getInfoLogLength() const noexcept -> isize
+		{
+			return get(InfoType::InfoLogLength);
+		}
+
+
+		auto BaseShader::getSourceLength() const noexcept -> usize
+		{
+			return get(InfoType::SourceLength);
+		}
+
+
+		auto BaseShader::isExists() const noexcept -> bool
+		{
+			return m_id == NONE;
+		}
+
+
+		auto BaseShader::getId() const noexcept -> u32
+		{
+			return m_id;
+		}
+
+
+		auto BaseShader::getInfoLog() const -> std::optional<std::string>
+		{
+			const isize infoLogLength{getInfoLogLength()};
+
+			if (infoLogLength == 0) return std::nullopt;
+
+			std::string infoLog;
+			glGetShaderInfoLog(m_id, infoLogLength, nullptr, infoLog.data());
+
+			return std::make_optional(std::move(infoLog));
+		}
+
+
+		auto BaseShader::deleteShader() const noexcept -> void
+		{
+			glDeleteShader(m_id);
+		}
+
+
+		BaseShader::~BaseShader()
+		{
+			if (m_id != NONE) deleteShader();
+		}
+
+
+		BaseShader::BaseShader(BaseShader &&rhs) noexcept
+		{
+			m_id = rhs.m_id;
+			rhs.m_id = NONE;
+		}
+
+
+		auto BaseShader::operator=(BaseShader &&rhs) noexcept -> BaseShader &
+		{
+			BaseShader{std::move(rhs)};
+
+			return *this;
+		}
+
+
+		BaseShader::BaseShader(const ShaderType type) noexcept
+			: m_id{glCreateShader(std::to_underlying(type))}
+		{
+		}
 	}
 
 
-	Shader::Shader()
+	VertexShader::VertexShader(const char *srcPath)
+		: BaseShader{ShaderType::Vertex}
 	{
-
+		compile(srcPath);
 	}
 
 
-	Shader::Shader(const Type type, const char *path)
-		: m_type{type}, m_id{glCreateShader(std::to_underlying(type))}
+	FragmentShader::FragmentShader(const char *srcPath)
+		: BaseShader{ShaderType::Fragment}
 	{
-		std::ifstream file{path};
-		std::ostringstream oss;
-		oss << file.rdbuf();
-		const std::string srcString{oss.str()};
-		const char *src{srcString.c_str()};
-
-		glShaderSource(m_id, 1, &src, nullptr);
-		glCompileShader(m_id);
+		compile(srcPath);
 	}
 
 
-	[[nodiscard]] auto Shader::getType() const noexcept -> Type
+	GeometryShader::GeometryShader(const char *srcPath)
+	: BaseShader{ShaderType::Geometry}
 	{
-		return m_type;
-	}
-
-
-	auto Shader::isMarkedForDeletion() const noexcept -> bool
-	{
-		return get(Info::DeleteStatus);
-	}
-
-
-	auto Shader::isCompiled() const noexcept -> bool
-	{
-		return get(Info::CompileStatus);
-	}
-
-
-	auto Shader::getInfoLogLength() const noexcept -> isize
-	{
-		return get(Info::InfoLogLength);
-	}
-
-
-	auto Shader::getSourceLength() const noexcept -> usize
-	{
-		return get(Info::SourceLength);
-	}
-
-
-	auto Shader::getId() const noexcept -> u32
-	{
-		return m_id;
-	}
-
-
-	auto Shader::getInfoLog() const -> opt<std::string>
-	{
-		const isize infoLogLength{getInfoLogLength()};
-
-		if (infoLogLength == 0) return boost::none;
-
-		std::string infoLog;
-		glGetShaderInfoLog(m_id, infoLogLength, nullptr, infoLog.data());
-
-		return boost::make_optional(std::move(infoLog));
-	}
-
-
-	auto Shader::deleteShader() const noexcept -> void
-	{
-		glDeleteShader(m_id);
+		compile(srcPath);
 	}
 }
