@@ -5,23 +5,38 @@
 #include "core.hpp"
 #include "shader.hpp"
 
-#include <initializer_list>
-#include <boost/container/small_vector.hpp>
-#include <boost/unordered/unordered_flat_map.hpp>
+#include <tuple>
+
 
 namespace glow
 {
-	class ShaderProgram
+	class ShaderProgram final
 	{
-		enum class Info;
+		enum class InfoType : u16
+		{
+			DeleteStatus = GL_DELETE_STATUS,
+			LinkStatus = GL_LINK_STATUS,
+			ValidateStatus = GL_VALIDATE_STATUS,
+			InfoLogLength = GL_INFO_LOG_LENGTH,
+			AttachedShaders = GL_ATTACHED_SHADERS,
+		};
 
-		[[nodiscard]] auto get(Info info) const noexcept -> i32;
-		[[nodiscard]] static auto getShaderTypeIndex(Shader::Type type) noexcept -> size_t;
+		[[nodiscard]] auto get(InfoType info) const noexcept -> i32;
 
 	public:
 
-		ShaderProgram(std::initializer_list<Shader> &&shaders);
+		struct CreateInfo final
+		{
+			VertexShader vertexShader;
+			FragmentShader fragmentShader;
+			GeometryShader geometryShader;
+		};
 
+		explicit ShaderProgram(CreateInfo &&createInfo);
+
+		~ShaderProgram();
+
+		ShaderProgram() = delete;
 		ShaderProgram(const ShaderProgram &) = delete;
 		ShaderProgram(ShaderProgram &&) = delete;
 		ShaderProgram &operator=(const ShaderProgram &) = delete;
@@ -29,25 +44,20 @@ namespace glow
 		[[nodiscard]] auto getId() const noexcept -> u32;
 		[[nodiscard]] auto isLinked() const noexcept -> bool;
 		[[nodiscard]] auto getLogLength() const noexcept -> isize;
-		[[nodiscard]] auto getInfoLog() const -> std::string;
+		[[nodiscard]] auto getInfoLog() const -> std::optional<std::string>;
+
+		template<class T> requires std::derived_from<T, detail::BaseShader>
 		[[nodiscard]] auto hasShader() const noexcept -> bool;
-		[[nodiscard]] auto hasShader(Shader::Type type) const noexcept-> bool;
-		[[nodiscard]] auto getShader(Shader::Type type) const noexcept -> const Shader &;
+
+		template<class T> requires std::derived_from<T, detail::BaseShader>
+		[[nodiscard]] auto getShader() const noexcept -> T &;
 
 		auto use() const noexcept -> void;
 
 	private:
 
-		boost::unordered::unordered_flat_map<Shader::Type, Shader> m_shaders;
-		u32 m_id;
-	};
+		std::tuple<VertexShader, FragmentShader, GeometryShader> m_shaders;
 
-	enum class ShaderProgram::Info
-	{
-		DeleteStatus = GL_DELETE_STATUS,
-		LinkStatus = GL_LINK_STATUS,
-		ValidateStatus = GL_VALIDATE_STATUS,
-		InfoLogLength = GL_INFO_LOG_LENGTH,
-		AttachedShaders = GL_ATTACHED_SHADERS,
+		u32 m_id;
 	};
 }

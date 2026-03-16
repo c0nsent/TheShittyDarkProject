@@ -72,6 +72,7 @@ namespace glow
 	{
 	public:
 
+		VertexShader() noexcept;
 		explicit VertexShader(const char *srcPath);
 	};
 
@@ -80,6 +81,7 @@ namespace glow
 	{
 	public:
 
+		FragmentShader() noexcept;
 		explicit FragmentShader(const char *srcPath);
 	};
 
@@ -88,6 +90,7 @@ namespace glow
 	{
 	public:
 
+		GeometryShader() noexcept;
 		explicit GeometryShader(const char *srcPath);
 	};
 }

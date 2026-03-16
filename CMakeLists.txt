@@ -18,12 +18,16 @@ add_executable(${PROJECT_NAME}
 		main.cc
 )
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different
-		${CMAKE_CURRENT_SOURCE_DIR}/shaders
-		$<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
-		COMMENT "Копирование шейдеров в выходную директорию"
+file(GLOB_RECURSE SHADER_FILES "shaders/*")
+add_custom_command(
+		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/shaders_stamp
+		DEPENDS ${SHADER_FILES}
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
+		COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/shaders_stamp
+		COMMENT "Копирование шейдеров при изменении"
 )
+add_custom_target(copy_shaders DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shaders_stamp)
+add_dependencies(${PROJECT_NAME} copy_shaders)
 
 target_link_libraries(${PROJECT_NAME}
 		glfw3

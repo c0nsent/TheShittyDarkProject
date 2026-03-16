@@ -1,57 +1,49 @@
 #include "shader-program.hpp"
 
-#include <array>
-
-#include <unordered_set>
 #include <glad/glad.h>
+
+#include <stdexcept>
+#include <utility>
+
 
 namespace glow
 {
-	auto ShaderProgram::get(const Info info) const noexcept -> i32
+	auto ShaderProgram::get(const InfoType info) const noexcept -> i32
 	{
-		i32 returnValue{};
-		glGetProgramiv(m_id, static_cast<u32>(info), &returnValue);
-		return returnValue;
+		i32 requested{};
+		glGetProgramiv(m_id, std::to_underlying(info), &requested);
+		return requested;
 	}
 
 
-	auto ShaderProgram::getShaderTypeIndex(const Shader::Type type) noexcept -> size_t
+	ShaderProgram::ShaderProgram(CreateInfo &&createInfo)
+		: m_shaders{std::move(createInfo.vertexShader), std::move(createInfo.fragmentShader), std::move(createInfo.geometryShader)}
+		, m_id{glCreateProgram()}
 	{
-		switch(type)
+		auto attachIfExist{[&] (const auto &shader) noexcept
 		{
-			case Shader::Type::Vertex: return 0;
-			case Shader::Type::Fragment: return 1;
-			case Shader::Type::Geometry: return 2;
-			default: return SHADER_TYPE_COUNT;
-		}
-	}
-
-
-	ShaderProgram::ShaderProgram(std::initializer_list<Shader> &&shaders)
-		: m_id{glCreateProgram()}
-	{
-		/*
-		std::unordered_set<Shader::Type> shaderTypes;
-
-		for (const Shader shader : shaders)
-		{
-			if (shaderTypes.contains(shader.getType()))
-				throw std::runtime_error{"Error passed same type"}; //TODO: Временно
-
-			shaderTypes.insert(shader.getType());
+			if (not shader.isExists()) return;
 
 			glAttachShader(m_id, shader.getId());
-		}*/
+			shader.deleteShader();
+		}};
 
-		for (const Shader shader : shaders)
-		{
-			if (m_shaders.contains(shader.getType()))
-			{
-				m_shaders[shader.getType()] = shader;
-			}
-		}
+		attachIfExist(std::get<VertexShader>(m_shaders));
+		attachIfExist(std::get<FragmentShader>(m_shaders));
+		attachIfExist(std::get<GeometryShader>(m_shaders));
 
 		glLinkProgram(m_id);
+
+		if (isLinked()) return;
+
+		auto log{getInfoLog().value_or("No Log")};
+		throw std::runtime_error{"Failed to link shader program: " + std::move(log)};
+	}
+
+
+	ShaderProgram::~ShaderProgram()
+	{
+		glDeleteProgram(m_id);
 	}
 
 
@@ -63,55 +55,40 @@ namespace glow
 
 	auto ShaderProgram::isLinked() const noexcept -> bool
 	{
-		return get(Info::LinkStatus);
+		return get(InfoType::LinkStatus);
 	}
 
 
 	auto ShaderProgram::getLogLength() const noexcept -> isize
 	{
-		return get(Info::InfoLogLength);
+		return get(InfoType::InfoLogLength);
 	}
 
 
-	auto ShaderProgram::getInfoLog() const -> std::string
+	auto ShaderProgram::getInfoLog() const -> std::optional<std::string>
 	{
 		const auto infoLogLength{getLogLength()};
 
-		if (infoLogLength == 0) return {};
+		if (infoLogLength == 0) return std::nullopt;
 
 		char infoLog[infoLogLength];
 		glGetProgramInfoLog(m_id, infoLogLength, nullptr, infoLog);
 
-		return infoLog;
+		return std::string{infoLog};
 	}
 
 
-	auto ShaderProgram::hasShader() const noexcept -> bool
+	template<class T> requires std::derived_from<T, detail::BaseShader>
+	auto ShaderProgram::hasShader() const noexcept  -> bool
 	{
-		return get(Info::AttachedShaders) != 0;
+		return std::get<T>(m_shaders).isExists();
 	}
 
 
-	auto ShaderProgram::hasShader(const Shader::Type type) const noexcept -> bool
+	template<class T> requires std::derived_from<T, detail::BaseShader>
+	auto ShaderProgram::getShader() const noexcept -> T &
 	{
-		std::array<u32, SHADER_TYPE_COUNT> shaders{};
-		glGetAttachedShaders(m_id, shaders.size(), nullptr, shaders.data());
-
-		for (const u32 shader : shaders)
-		{
-			b32 isRequiredType;
-			glGetShaderiv(shader, static_cast<u32>(type), &isRequiredType);
-
-			return isRequiredType;
-		}
-
-		return false;
-	}
-
-
-	auto ShaderProgram::getShader(Shader::Type type) const noexcept -> const Shader &
-	{
-
+		return std::get<T>(m_shaders);
 	}
 
 

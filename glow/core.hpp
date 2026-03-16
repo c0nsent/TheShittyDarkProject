@@ -36,8 +36,6 @@ namespace glow
 
 	using namespace glow::basic_types;
 
-	static constexpr usize SHADER_TYPE_COUNT{3};
-
 	struct Color
 	{
 		f32 red{};
@@ -45,6 +43,8 @@ namespace glow
 		f32 blue{};
 		f32 alpha{1.f};
 	};
+
+
 
 	inline auto clearColor(const Color &background) noexcept -> void
 	{

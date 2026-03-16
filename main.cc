@@ -10,6 +10,7 @@
 #include "glow/screen-cleaner.hpp"
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
+#include "glow/uniform.hpp"
 #include "glow/utility.hpp"
 
 
@@ -69,17 +70,12 @@ auto main() -> int
 		return 1;
 	}
 
-	const glow::ShaderProgram shaderProgram{
-		{glow::Shader::Type::Vertex, "shaders/shader.vert"},
-		{glow::Shader::Type::Fragment, "shaders/shader.frag"}
+	glow::ShaderProgram::CreateInfo shaderProgramInfo{
+		.vertexShader{"shaders/shader.vert"},
+		.fragmentShader{"shaders/shader.frag"}
 	};
 
-	if (not shaderProgram.isLinked())
-	{
-		std::cerr << shaderProgram.getInfoLog();
-		return 1;
-	}
-
+	const glow::ShaderProgram shaderProgram{std::move(shaderProgramInfo)};
 
 	constexpr auto vertices{ std::to_array<f32>({
 		-0.5f,  0.25f, 0.0f,
@@ -109,10 +105,14 @@ auto main() -> int
 		const glow::ClearBuffer clearBuffer{std::make_tuple(glow::Color{0.2f, 0.3f, 0.3f})};
 		clearBuffer.clear();
 
-		const f32 greenValue{static_cast<f32>(glm::sin(glfwGetTime()) / 2.f + 0.5f)};
-		const i32 vertexColor{glGetUniformLocation(shaderProgram.getId(), "ourColor")};
+		const glow::Color greenColor{
+			.red = 0.f,
+			.green = static_cast<f32>(glm::sin(glfwGetTime()) / 2.f + 0.5f),
+			.blue = 0.f
+		};
 		shaderProgram.use();
-		glUniform4f(vertexColor, 0.f, greenValue, 0.f, 1.f);
+		const glow::Uniform4f vertexColor{shaderProgram, "ourColor"};
+		vertexColor.setColor(greenColor);
 
 		glBindVertexArray(vao);
 		glow::Error::print();

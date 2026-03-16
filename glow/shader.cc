@@ -37,7 +37,7 @@ namespace glow
 			if (isCompiled()) return;
 
 			auto log{getInfoLog().value_or("No log")};
-			throw std::runtime_error{"Shader compilation failed: " + std::move(log)};
+			throw std::runtime_error{std::string{"Shader compilation failed: "} +  path + '\n' + log};
 		}
 
 
@@ -67,7 +67,7 @@ namespace glow
 
 		auto BaseShader::isExists() const noexcept -> bool
 		{
-			return m_id == NONE;
+			return m_id != NONE;
 		}
 
 
@@ -83,10 +83,10 @@ namespace glow
 
 			if (infoLogLength == 0) return std::nullopt;
 
-			std::string infoLog;
-			glGetShaderInfoLog(m_id, infoLogLength, nullptr, infoLog.data());
+			char infoLog[infoLogLength];
+			glGetShaderInfoLog(m_id, infoLogLength, nullptr, infoLog);
 
-			return std::make_optional(std::move(infoLog));
+			return std::string{infoLog};
 		}
 
 
@@ -96,15 +96,9 @@ namespace glow
 		}
 
 
-		BaseShader::~BaseShader()
-		{
-			if (m_id != NONE) deleteShader();
-		}
-
-
 		BaseShader::BaseShader(BaseShader &&rhs) noexcept
 		{
-			m_id = rhs.m_id;
+			m_id     = rhs.m_id;
 			rhs.m_id = NONE;
 		}
 
@@ -117,11 +111,20 @@ namespace glow
 		}
 
 
+		BaseShader::~BaseShader()
+		{
+			if (m_id != NONE) deleteShader();
+		}
+
+
 		BaseShader::BaseShader(const ShaderType type) noexcept
 			: m_id{glCreateShader(std::to_underlying(type))}
 		{
 		}
 	}
+
+
+	VertexShader::VertexShader() noexcept : BaseShader{} {}
 
 
 	VertexShader::VertexShader(const char *srcPath)
@@ -131,11 +134,17 @@ namespace glow
 	}
 
 
+	FragmentShader::FragmentShader() noexcept : BaseShader{} {}
+
+
 	FragmentShader::FragmentShader(const char *srcPath)
 		: BaseShader{ShaderType::Fragment}
 	{
 		compile(srcPath);
 	}
+
+
+	GeometryShader::GeometryShader() noexcept : BaseShader{} {}
 
 
 	GeometryShader::GeometryShader(const char *srcPath)
