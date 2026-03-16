@@ -8,22 +8,6 @@
 
 namespace glow
 {
-	enum class Shader::Info : u16
-	{
-		Type = GL_SHADER_TYPE,
-		DeleteStatus = GL_DELETE_STATUS,
-		CompileStatus = GL_COMPILE_STATUS,
-		InfoLogLength = GL_INFO_LOG_LENGTH,
-		SourceLength = GL_SHADER_SOURCE_LENGTH,
-	};
-
-	enum class Shader::Type : u16
-	{
-		Fragment = GL_FRAGMENT_SHADER,
-		Vertex = GL_VERTEX_SHADER,
-		Geometry = GL_GEOMETRY_SHADER,
-	};
-
 	auto Shader::get(const Info info) const noexcept-> i32
 	{
 		i32 returnValue{0};
@@ -34,8 +18,8 @@ namespace glow
 
 
 	Shader::Shader()
-
 	{
+
 	}
 
 
