@@ -32,7 +32,7 @@ namespace glow
 			GeometryShader geometryShader;
 		};
 
-		explicit ShaderProgram(CreateInfo &&createInfo);
+		ShaderProgram(CreateInfo &&createInfo);
 
 		~ShaderProgram();
 

@@ -70,17 +70,15 @@ auto main() -> int
 		return 1;
 	}
 
-	glow::ShaderProgram::CreateInfo shaderProgramInfo{
+	const glow::ShaderProgram shaderProgram{{
 		.vertexShader{"shaders/shader.vert"},
 		.fragmentShader{"shaders/shader.frag"}
-	};
-
-	const glow::ShaderProgram shaderProgram{std::move(shaderProgramInfo)};
+	}};
 
 	constexpr auto vertices{ std::to_array<f32>({
-		-0.5f,  0.25f, 0.0f,
-		0.5f, 0.25f, 0.0f,
-		0.0f, -0.75f, 0.0f,
+		0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
 	})};
 
 	u32 vbo;
@@ -92,11 +90,12 @@ auto main() -> int
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glNamedBufferData(vbo, vertices.size() * sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * sizeof(f32), nullptr);
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 6 * sizeof(f32), reinterpret_cast<void *>(0));
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, 6 * sizeof(f32), reinterpret_cast<void*>(3 * sizeof(f32)));
+	glEnableVertexAttribArray(1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	shaderProgram.use();
 
 	while (not glfwWindowShouldClose(window))
 	{
@@ -105,17 +104,7 @@ auto main() -> int
 		const glow::ClearBuffer clearBuffer{std::make_tuple(glow::Color{0.2f, 0.3f, 0.3f})};
 		clearBuffer.clear();
 
-		const glow::Color greenColor{
-			.red = 0.f,
-			.green = static_cast<f32>(glm::sin(glfwGetTime()) / 2.f + 0.5f),
-			.blue = 0.f
-		};
-		shaderProgram.use();
-		const glow::Uniform4f vertexColor{shaderProgram, "ourColor"};
-		vertexColor.setColor(greenColor);
-
 		glBindVertexArray(vao);
-		glow::Error::print();
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		glfwSwapBuffers(window);

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 4.2)
 
 project(TheShittyDarkProject
-		LANGUAGES CXX C
+		LANGUAGES CXX
 		VERSION 0.0.2
 )
 
