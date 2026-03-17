@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #define STB_IMAGE_IMPLEMENTATION
+#include <unistd.h>
 #include <stb/stb_image.h>
 
 #include "glow/core.hpp"
@@ -76,15 +77,15 @@ auto main() -> int
 	}};
 
 	constexpr auto vertices{ std::to_array<f32>({
-		0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.f, 1.f,
+		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.f, 0.f,
+		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.f, 0.f
+		-0.5f,  0.5f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
 	})};
 
-	const auto texCoords{ std::to_array<f32>({
-		0.f, 0.f,
-		1.f, 0.f,
-		0.f, 1.f,
+	constexpr auto indices{ std::to_array<f32>({
+		0, 1, 3,
+		1, 2, 3
 	})};
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
@@ -97,27 +98,45 @@ auto main() -> int
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	int width, height, nrChannels;
-	unsigned char *imageData{stbi_load("obama.png", &width, &height, &nrChannels, 0)};
+	unsigned char *imageData{stbi_load("textures/obama.png", &width, &height, &nrChannels, 0)};
 
-	u32 vbo;
+	if (not imageData)
+	{
+		std::cerr << "Failed to load image\n";
+		return 1;
+	}
+
+	u32 texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(imageData);
+
+	u32 vbo, vao, ebo;
 	glGenBuffers(1, &vbo);
-	u32 vao;
+	glGenBuffers(1, &ebo);
 	glGenVertexArrays(1, &vao);
 
 	glBindVertexArray(vao);
+
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glNamedBufferData(vbo, vertices.size() * sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 6 * sizeof(f32), reinterpret_cast<void *>(0));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glNamedBufferData(ebo, indices.size() * sizeof(indices.front()), indices.data(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(f32), reinterpret_cast<void *>(0));
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, false, 6 * sizeof(f32), reinterpret_cast<void*>(3 * sizeof(f32)));
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(f32), reinterpret_cast<void*>(3 * sizeof(f32)));
 	glEnableVertexAttribArray(1);
 
-	shaderProgram.use();
-	const i32 offset{glGetUniformLocation(shaderProgram.getId(), "offset")};
-	glUniform1f(offset, 0.5f);
+	glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(f32), reinterpret_cast<void *>(6 * sizeof(f32)));
+	glEnableVertexAttribArray(2);
 
-
+	glow::Error::printIfError();
 
 	while (not glfwWindowShouldClose(window))
 	{
@@ -126,8 +145,13 @@ auto main() -> int
 		const glow::ClearBuffer clearBuffer{std::make_tuple(glow::Color{0.2f, 0.3f, 0.3f})};
 		clearBuffer.clear();
 
+		glBindTexture(GL_TEXTURE_2D, texture);
+
+		shaderProgram.use();
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+		glow::Error::printIfError();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

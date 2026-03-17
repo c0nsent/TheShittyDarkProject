@@ -12,6 +12,18 @@ find_package(glfw3 3.5 REQUIRED)
 find_package(glm 1.0.3 REQUIRED)
 find_package(Boost 1.89 REQUIRED)
 
+find_path(STB_INCLUDE_DIR
+		NAMES stb_image.h
+		PATH_SUFFIXES stb
+)
+
+if(NOT STB_INCLUDE_DIR)
+	message(FATAL_ERROR "stb headers not found. Please install stb (e.g., 'sudo pacman -S stb')")
+endif()
+
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE ${STB_INCLUDE_DIR})
+
 add_subdirectory(glow)
 
 add_executable(${PROJECT_NAME}
@@ -29,29 +41,22 @@ add_custom_command(
 add_custom_target(copy_shaders DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shaders_stamp)
 add_dependencies(${PROJECT_NAME} copy_shaders)
 
-#[[find_path(STB_INCLUDE_DIR stb_image.h)
-if(STB_INCLUDE_DIR)
-	target_include_directories(${PROJECT_NAME} PRIVATE ${STB_INCLUDE_DIR})
-else()
-	message(FATAL_ERROR "stb not found")
-endif()]]
-
-find_path(STB_INCLUDE_DIR
-		NAMES stb_image.h          # ищем любой характерный заголовок
-		PATH_SUFFIXES stb          # иногда stb_image.h лежит в подпапке stb/
+# Копирование текстур
+file(GLOB_RECURSE TEXTURE_FILES "textures/*")
+add_custom_command(
+		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/textures_stamp
+		DEPENDS ${TEXTURE_FILES}
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/textures $<TARGET_FILE_DIR:${PROJECT_NAME}>/textures
+		COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/textures_stamp
+		COMMENT "Копирование текстур при изменении"
 )
-
-if(NOT STB_INCLUDE_DIR)
-	message(FATAL_ERROR "stb headers not found. Please install stb (e.g., 'sudo pacman -S stb')")
-endif()
-
-# Создаём интерфейсную цель для удобного подключения
-add_library(stb INTERFACE)
-target_include_directories(stb INTERFACE ${STB_INCLUDE_DIR})
+add_custom_target(copy_textures DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/textures_stamp)
+add_dependencies(${PROJECT_NAME} copy_textures)
 
 target_link_libraries(${PROJECT_NAME}
 		glfw3
-		glm
+		glm::glm
 		glow
 		stb
+		glad
 )
