@@ -29,7 +29,29 @@ add_custom_command(
 add_custom_target(copy_shaders DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shaders_stamp)
 add_dependencies(${PROJECT_NAME} copy_shaders)
 
+#[[find_path(STB_INCLUDE_DIR stb_image.h)
+if(STB_INCLUDE_DIR)
+	target_include_directories(${PROJECT_NAME} PRIVATE ${STB_INCLUDE_DIR})
+else()
+	message(FATAL_ERROR "stb not found")
+endif()]]
+
+find_path(STB_INCLUDE_DIR
+		NAMES stb_image.h          # ищем любой характерный заголовок
+		PATH_SUFFIXES stb          # иногда stb_image.h лежит в подпапке stb/
+)
+
+if(NOT STB_INCLUDE_DIR)
+	message(FATAL_ERROR "stb headers not found. Please install stb (e.g., 'sudo pacman -S stb')")
+endif()
+
+# Создаём интерфейсную цель для удобного подключения
+add_library(stb INTERFACE)
+target_include_directories(stb INTERFACE ${STB_INCLUDE_DIR})
+
 target_link_libraries(${PROJECT_NAME}
 		glfw3
+		glm
 		glow
+		stb
 )

@@ -3,14 +3,14 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 
 #include "glow/core.hpp"
 #include "glow/error.hpp"
 #include "glow/screen-cleaner.hpp"
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
-#include "glow/uniform.hpp"
 #include "glow/utility.hpp"
 
 
@@ -81,6 +81,24 @@ auto main() -> int
 		0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
 	})};
 
+	const auto texCoords{ std::to_array<f32>({
+		0.f, 0.f,
+		1.f, 0.f,
+		0.f, 1.f,
+	})};
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	int width, height, nrChannels;
+	unsigned char *imageData{stbi_load("obama.png", &width, &height, &nrChannels, 0)};
+
 	u32 vbo;
 	glGenBuffers(1, &vbo);
 	u32 vao;
@@ -96,6 +114,10 @@ auto main() -> int
 	glEnableVertexAttribArray(1);
 
 	shaderProgram.use();
+	const i32 offset{glGetUniformLocation(shaderProgram.getId(), "offset")};
+	glUniform1f(offset, 0.5f);
+
+
 
 	while (not glfwWindowShouldClose(window))
 	{
