@@ -39,6 +39,36 @@ auto processInput(GLFWwindow *window) -> void
 }
 
 
+auto createTexture(const char *path) -> u32
+{
+	u32 textureId;
+	glGenTextures(1, &textureId);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	i32 width, height, nrChannels;
+	u8 *imageData{stbi_load(path, &width, &height, &nrChannels, 0)};
+
+	const i32 format{nrChannels == 3 ? GL_RGB : GL_RGBA};
+
+	if (not imageData)
+		throw std::runtime_error{"Failed to load image\n"};
+
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, imageData);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(imageData);
+
+	return textureId;
+}
+
+
 auto main() -> int
 {
 	glfwSetErrorCallback(errorCallback);
@@ -87,31 +117,10 @@ auto main() -> int
 		1, 2, 3,
 	})};
 
-	u32 texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	stbi_set_flip_vertically_on_load(true);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	i32 width, height, nrChannels;
-	u8 *imageData{stbi_load("textures/container.png", &width, &height, &nrChannels, 0)};
-
-	i32 format{nrChannels == 3 ? GL_RGB : GL_RGBA};
-
-	if (not imageData)
-	{
-		std::cerr << "Failed to load image\n";
-		return 1;
-	}
-
-	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, imageData);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	stbi_image_free(imageData);
+	const auto containerTexture{createTexture("textures/container.png")};
+	const auto obamaTexture{createTexture("textures/obama.png")};
 
 	u32 vbo, vao, ebo;
 	glGenBuffers(1, &vbo);
@@ -135,7 +144,10 @@ auto main() -> int
 	glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(indices.front()), reinterpret_cast<void *>(6 * sizeof(indices.front())));
 	glEnableVertexAttribArray(2);
 
-	glow::Error::printIfError();
+	shaderProgram.use();
+	glUniform1i(glGetUniformLocation(shaderProgram.getId(), "texture1"), 0);
+	glUniform1i(glGetUniformLocation(shaderProgram.getId(), "texture2"), 1);
+
 
 	while (not glfwWindowShouldClose(window))
 	{
@@ -144,7 +156,10 @@ auto main() -> int
 		const glow::ClearBuffer clearBuffer{std::make_tuple(glow::Color{0.2f, 0.3f, 0.3f})};
 		clearBuffer.clear();
 
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, containerTexture);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, obamaTexture);
 
 		shaderProgram.use();
 		glBindVertexArray(vao);
