@@ -1,10 +1,6 @@
-#include <array>
-#include <iostream>
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #define STB_IMAGE_IMPLEMENTATION
-#include <unistd.h>
 #include <stb/stb_image.h>
 
 #include "glow/core.hpp"
@@ -13,6 +9,9 @@
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
 #include "glow/utility.hpp"
+
+#include <array>
+#include <iostream>
 
 
 using namespace glow::basic_types;
@@ -77,28 +76,31 @@ auto main() -> int
 	}};
 
 	constexpr auto vertices{ std::to_array<f32>({
-		 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.f, 1.f,
-		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.f, 0.f,
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.f, 0.f
-		-0.5f,  0.5f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+		 0.5f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f,	1.0f, 1.0f,
+		 0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	1.0f, 0.0f,
+		-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f,	0.0f, 0.0f,
+		-0.5f,  0.5f, 0.0f,		1.0f, 1.0f, 0.0f,	0.0f, 1.0f,
 	})};
 
-	constexpr auto indices{ std::to_array<f32>({
+	constexpr auto indices{ std::to_array<u32>({
 		0, 1, 3,
-		1, 2, 3
+		1, 2, 3,
 	})};
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	u32 texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	int width, height, nrChannels;
-	unsigned char *imageData{stbi_load("textures/obama.png", &width, &height, &nrChannels, 0)};
+	i32 width, height, nrChannels;
+	u8 *imageData{stbi_load("textures/container.png", &width, &height, &nrChannels, 0)};
+
+	i32 format{nrChannels == 3 ? GL_RGB : GL_RGBA};
 
 	if (not imageData)
 	{
@@ -106,10 +108,7 @@ auto main() -> int
 		return 1;
 	}
 
-	u32 texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, imageData);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	stbi_image_free(imageData);
@@ -127,13 +126,13 @@ auto main() -> int
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glNamedBufferData(ebo, indices.size() * sizeof(indices.front()), indices.data(), GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(f32), reinterpret_cast<void *>(0));
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(indices.front()), reinterpret_cast<void *>(0));
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(f32), reinterpret_cast<void*>(3 * sizeof(f32)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(indices.front()), reinterpret_cast<void*>(3 * sizeof(indices.front())));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(f32), reinterpret_cast<void *>(6 * sizeof(f32)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(indices.front()), reinterpret_cast<void *>(6 * sizeof(indices.front())));
 	glEnableVertexAttribArray(2);
 
 	glow::Error::printIfError();
