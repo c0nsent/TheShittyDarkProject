@@ -9,7 +9,6 @@ namespace glow
 {
 	namespace basic_types
 	{
-
 		using f16 = _Float16;
 		using f32 = _Float32;
 		using f64 = _Float64;
@@ -43,8 +42,6 @@ namespace glow
 		f32 blue{};
 		f32 alpha{1.f};
 	};
-
-
 
 	inline auto clearColor(const Color &background) noexcept -> void
 	{

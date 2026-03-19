@@ -14,11 +14,11 @@ namespace glow
 	{
 		enum class InfoType : u16
 		{
-			DeleteStatus = GL_DELETE_STATUS,
-			LinkStatus = GL_LINK_STATUS,
-			ValidateStatus = GL_VALIDATE_STATUS,
-			InfoLogLength = GL_INFO_LOG_LENGTH,
-			AttachedShaders = GL_ATTACHED_SHADERS,
+			DeleteStatus = 0x8B80,
+			LinkStatus = 0x8B82,
+			ValidateStatus = 0x8B83,
+			InfoLogLength = 0x8B84,
+			AttachedShaders = 0x8B85,
 		};
 
 		[[nodiscard]] auto get(InfoType info) const noexcept -> i32;

@@ -96,16 +96,24 @@ namespace glow
 		}
 
 
-		BaseShader::BaseShader(BaseShader &&rhs) noexcept
+		void BaseShader::swap(BaseShader &lhs, BaseShader &rhs) noexcept
 		{
-			m_id     = rhs.m_id;
-			rhs.m_id = NONE;
+			const auto temp{lhs.getId()};
+			lhs.m_id = rhs.m_id;
+			rhs.m_id = temp;
+		}
+
+
+		BaseShader::BaseShader(BaseShader &&rhs) noexcept
+			: BaseShader{}
+		{
+			swap(*this, rhs);
 		}
 
 
 		auto BaseShader::operator=(BaseShader &&rhs) noexcept -> BaseShader &
 		{
-			BaseShader{std::move(rhs)};
+			swap(*this, rhs);
 
 			return *this;
 		}

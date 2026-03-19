@@ -26,7 +26,7 @@ auto errorCallback(const i32 error, const char *description) -> void
 }
 
 
-auto framebufferSizeCallback(GLFWwindow *window, const i32 width, const i32 height) -> void
+auto framebufferSizeCallback(GLFWwindow *, const i32 width, const i32 height) -> void
 {
 	glow::viewport(0, 0, width, height);
 }
@@ -106,10 +106,10 @@ auto main() -> int
 	}};
 
 	constexpr auto vertices{ std::to_array<f32>({
-		 0.5f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f,	1.0f, 1.0f,
-		 0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	1.0f, 0.0f,
+		 0.5f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f,	2.0f, 2.0f,
+		 0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	2.0f, 0.0f,
 		-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f,	0.0f, 0.0f,
-		-0.5f,  0.5f, 0.0f,		1.0f, 1.0f, 0.0f,	0.0f, 1.0f,
+		-0.5f,  0.5f, 0.0f,		1.0f, 1.0f, 0.0f,	0.0f, 2.0f,
 	})};
 
 	constexpr auto indices{ std::to_array<u32>({

@@ -2,8 +2,6 @@
 
 #include "core.hpp"
 
-#include <glad/glad.h>
-
 #include <optional>
 #include <string>
 
@@ -18,18 +16,18 @@ namespace glow
 
 			enum class InfoType : u16
 			{
-				Type = GL_SHADER_TYPE,
-				DeleteStatus = GL_DELETE_STATUS,
-				CompileStatus = GL_COMPILE_STATUS,
-				InfoLogLength = GL_INFO_LOG_LENGTH,
-				SourceLength = GL_SHADER_SOURCE_LENGTH,
+				Type = 0x8B4F,
+				DeleteStatus = 0x8B80,
+				CompileStatus = 0x8B81,
+				InfoLogLength = 0x8B84,
+				SourceLength = 0x8B88,
 			};
 
 			enum class ShaderType : u16
 			{
-				Vertex = GL_VERTEX_SHADER,
-				Fragment = GL_FRAGMENT_SHADER,
-				Geometry = GL_GEOMETRY_SHADER,
+				Fragment = 0x8B30,
+				Vertex = 0x8B31,
+				Geometry = 0x8DD9,
 			};
 
 			static constexpr u32 NONE{0};
@@ -49,6 +47,8 @@ namespace glow
 			[[nodiscard]] auto getId() const noexcept -> u32;
 			[[nodiscard]] auto getInfoLog() const -> std::optional<std::string>;
 			auto deleteShader() const noexcept -> void;
+
+			static void swap(BaseShader &lhs, BaseShader &rhs ) noexcept;
 
 			BaseShader(BaseShader &&rhs) noexcept;
 			auto operator=(BaseShader &&rhs) noexcept -> BaseShader &;

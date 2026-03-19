@@ -16,6 +16,7 @@ add_library( glow SHARED
 		error.cc error.hpp
 		utility.cc utility.hpp
 		uniform.cc uniform.hpp
+		texture.cc texture.hpp
 )
 
 add_subdirectory(glad)
