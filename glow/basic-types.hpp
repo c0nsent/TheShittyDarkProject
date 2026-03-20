@@ -1,17 +1,12 @@
 #pragma once
 
-#include <glad/glad.h>
-
-#include <expected>
-
-
 namespace glow
 {
-	namespace basic_types
+	namespace basicTypes
 	{
-		using f16 = _Float16;
-		using f32 = _Float32;
-		using f64 = _Float64;
+		using f16 = _Float16  ;
+		using f32 = float;
+		using f64 = double;
 		using f128 = _Float128;
 
 		using u8 = unsigned char;
@@ -26,14 +21,8 @@ namespace glow
 
 		using usize = u32;
 		using isize = i32;
-
-		using b32 = i32;
-
-		template <class T, class U>
-		using Result = std::expected<T, U>;
 	}
-
-	using namespace glow::basic_types;
+	using namespace glow::basicTypes;
 
 	struct Color
 	{
@@ -42,9 +31,4 @@ namespace glow
 		f32 blue{};
 		f32 alpha{1.f};
 	};
-
-	inline auto clearColor(const Color &background) noexcept -> void
-	{
-		glClearColor(background.red, background.green, background.blue, background.alpha);
-	}
 }

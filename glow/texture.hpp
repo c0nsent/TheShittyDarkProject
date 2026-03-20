@@ -1,10 +1,8 @@
 #pragma once
 
-
 #include <glad/glad.h>
 
-
-#include "core.hpp"
+#include "basic-types.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
@@ -13,7 +11,6 @@ namespace glow
 {
 	class Texture final
 	{
-
 
 	public:
 

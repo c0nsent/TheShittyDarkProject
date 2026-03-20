@@ -1,5 +1,8 @@
 #include "screen-cleaner.hpp"
 
+#include <glad/glad.h>
+
+
 namespace glow
 {
 	ClearBuffer::ClearBuffer(std::tuple<Color> &&bufferValues) noexcept

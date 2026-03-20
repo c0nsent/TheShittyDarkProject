@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core.hpp"
+#include "basic-types.hpp"
 
 #include <source_location>
 
@@ -9,27 +9,30 @@ namespace glow
 {
 	class Error
 	{
-		using src_loc = std::source_location;
+		using srcLoc = std::source_location;
+
 	public:
 
 		enum class Code : u16
 		{
-			NoError = GL_NO_ERROR,
-			InvalidEnum = GL_INVALID_ENUM,
-			InvalidValue = GL_INVALID_VALUE,
-			InvalidOperation = GL_INVALID_OPERATION,
-			StackOverflow = GL_STACK_OVERFLOW,
-			StackUnderflow = GL_STACK_UNDERFLOW,
-			OutOfMemory = GL_OUT_OF_MEMORY,
-			InvalidFrameBufferOperation = GL_INVALID_FRAMEBUFFER_OPERATION,
+			NoError = 0,
+			InvalidEnum = 0x0500,
+			InvalidValue = 0x0501,
+			InvalidOperation = 0x0502,
+			StackOverflow = 0x0503,
+			StackUnderflow = 0x0504,
+			OutOfMemory = 0x0505,
+			InvalidFrameBufferOperation = 0x0506,
 		};
 
 		[[nodiscard]] static auto last() noexcept -> Code;
-		static auto print(Code code = last(), const src_loc &loc = src_loc::current()) -> void;
-		static auto printIfError(Code code = last(), const src_loc &loc = src_loc::current()) -> void;
+
+		static auto print(srcLoc loc = srcLoc::current()) noexcept -> void;
+		static auto printIfError(srcLoc loc = srcLoc::current()) -> void;
 
 	private:
 
+		static auto print(Code code, srcLoc loc) -> void;
 		[[nodiscard]] static auto toString(Code code) -> const char *;
 	};
 }

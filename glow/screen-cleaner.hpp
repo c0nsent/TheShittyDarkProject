@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core.hpp"
+#include "basic-types.hpp"
 
 #include <tuple>
 
@@ -8,11 +8,11 @@ namespace glow
 {
 	class ClearBuffer
 	{
-		enum class Buffer
+		enum class Buffer : u16
 		{
-			Color = GL_COLOR_BUFFER_BIT,
-			Depth = GL_DEPTH_BUFFER_BIT,
-			Stencil = GL_STENCIL_BUFFER_BIT,
+			Depth = 0x00000100,
+			Stencil = 0x00000400,
+			Color = 0x00004000,
 		};
 
 	public:

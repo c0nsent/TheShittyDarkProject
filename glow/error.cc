@@ -1,6 +1,9 @@
 #include "error.hpp"
 
-#include <iostream>
+#include <glad/glad.h>
+
+#include <print>
+
 
 namespace glow
 {
@@ -10,18 +13,21 @@ namespace glow
 	}
 
 
-	auto Error::print(const Code code, const src_loc &loc) -> void
+	auto Error::print(const srcLoc loc) noexcept -> void
 	{
-		std::cerr << "[ " <<  loc.file_name() << " | " << loc.function_name() << " | " << loc.line()
-				  << " ] Error : " << toString(code) << '\n';
+		print(last(), loc);
 	}
 
 
-	auto Error::printIfError(const Code code, const src_loc &loc) -> void
+	auto Error::printIfError(const srcLoc loc) -> void
 	{
-		if (code == Code::NoError) return;
+		if (const Code code{last()}; code != Code::NoError) print(code, loc);
+	}
 
-		print(code, loc);
+
+	auto Error::print(const Code code, const srcLoc loc) -> void
+	{
+		std::println("[ {0} | {1} ] Error : {2}", loc.file_name(), loc.function_name(), toString(code));
 	}
 
 
@@ -37,6 +43,7 @@ namespace glow
 			case Code::StackUnderflow: return "Stack underflow";
 			case Code::OutOfMemory: return "Out of memory";
 			case Code::InvalidFrameBufferOperation: return "Invalid frame buffer operation";
+
 			default: return "Unknown error";
 		}
 	}

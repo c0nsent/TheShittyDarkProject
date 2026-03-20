@@ -6,4 +6,10 @@ namespace glow
 	{
 		glViewport(x, y, width, height);
 	}
+
+
+	auto clearColor(const Color &background) noexcept -> void
+	{
+		glClearColor(background.red, background.green, background.blue, background.alpha);
+	}
 }

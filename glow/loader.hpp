@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core.hpp"
-
 #include <glad/glad.h>
 
 
@@ -11,7 +9,9 @@ namespace
 	{
 	public:
 
-		Loader(void* (* GLADloadproc)(const char *name));
+	private:
+
+
 
 	};
 }

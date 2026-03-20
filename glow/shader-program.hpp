@@ -2,7 +2,7 @@
 
 #include <glad/glad.h>
 
-#include "core.hpp"
+#include "basic-types.hpp"
 #include "shader.hpp"
 
 #include <tuple>

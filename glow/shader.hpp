@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core.hpp"
+#include "basic-types.hpp"
 
 #include <optional>
 #include <string>

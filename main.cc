@@ -10,11 +10,12 @@
 #include "glow/shader.hpp"
 #include "glow/utility.hpp"
 
+
 #include <array>
 #include <iostream>
 
 
-using namespace glow::basic_types;
+using namespace glow::basicTypes;
 
 constexpr i32 WIDTH{800};
 constexpr i32 HEIGHT{600};
