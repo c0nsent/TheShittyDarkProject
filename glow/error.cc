@@ -7,21 +7,31 @@
 
 namespace glow
 {
-	auto Error::last() noexcept -> Code
+	auto Error::getErrorCode() noexcept -> Code { return static_cast<Code>(glGetError()); }
+
+	auto Error::clearAndGetLastErrorCode() noexcept -> Code
 	{
-		return static_cast<Code>(glGetError());
+		Code previous{getErrorCode()};
+		Code last{previous};
+
+		while (last != Code::NoError)
+		{
+			previous = last;
+			last = getErrorCode();
+		}
+
+		return previous;
 	}
 
+	auto Error::clear() noexcept -> void { while (getErrorCode() != Code::NoError) {} }
 
-	auto Error::print(const srcLoc loc) noexcept -> void
-	{
-		print(last(), loc);
-	}
+
+	auto Error::print(const srcLoc loc) -> void { print(getErrorCode(), loc); }
 
 
 	auto Error::printIfError(const srcLoc loc) -> void
 	{
-		if (const Code code{last()}; code != Code::NoError) print(code, loc);
+		if (const Code code{getErrorCode()}; code != Code::NoError) print(code, loc);
 	}
 
 
@@ -31,7 +41,7 @@ namespace glow
 	}
 
 
-	auto Error::toString(const Code code) -> const char *
+	constexpr auto Error::toString(const Code code) -> const char *
 	{
 		switch (code)
 		{
@@ -43,8 +53,8 @@ namespace glow
 			case Code::StackUnderflow: return "Stack underflow";
 			case Code::OutOfMemory: return "Out of memory";
 			case Code::InvalidFrameBufferOperation: return "Invalid frame buffer operation";
-
-			default: return "Unknown error";
 		}
+
+		return "Unknown error";
 	}
 }

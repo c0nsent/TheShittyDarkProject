@@ -25,14 +25,17 @@ namespace glow
 			InvalidFrameBufferOperation = 0x0506,
 		};
 
-		[[nodiscard]] static auto last() noexcept -> Code;
+		[[nodiscard]] static auto getErrorCode() noexcept -> Code;
+		[[nodiscard]] static auto clearAndGetLastErrorCode() noexcept -> Code;
 
-		static auto print(srcLoc loc = srcLoc::current()) noexcept -> void;
+		static auto clear() noexcept -> void;
+
+		static auto print(srcLoc loc = srcLoc::current()) -> void;
 		static auto printIfError(srcLoc loc = srcLoc::current()) -> void;
 
 	private:
 
-		static auto print(Code code, srcLoc loc) -> void;
-		[[nodiscard]] static auto toString(Code code) -> const char *;
+	    static auto print(Code code, srcLoc loc) -> void;
+	    [[nodiscard]] static constexpr  auto toString(Code code) -> const char *;
 	};
 }

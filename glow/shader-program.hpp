@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glad/glad.h>
-
 #include "basic-types.hpp"
 #include "shader.hpp"
 
@@ -32,7 +30,7 @@ namespace glow
 			GeometryShader geometryShader;
 		};
 
-		ShaderProgram(CreateInfo &&createInfo);
+		explicit ShaderProgram(CreateInfo &&createInfo);
 
 		~ShaderProgram();
 
@@ -46,11 +44,11 @@ namespace glow
 		[[nodiscard]] auto getLogLength() const noexcept -> isize;
 		[[nodiscard]] auto getInfoLog() const -> std::optional<std::string>;
 
-		template<class T> requires std::derived_from<T, detail::BaseShader>
-		[[nodiscard]] auto hasShader() const noexcept -> bool;
+		template<class ShaderType> requires std::derived_from<ShaderType, detail::BaseShader>
+		[[nodiscard]] auto hasAttachedShader() const noexcept -> bool;
 
-		template<class T> requires std::derived_from<T, detail::BaseShader>
-		[[nodiscard]] auto getShader() const noexcept -> T &;
+		template<class ShaderType> requires std::derived_from<ShaderType, detail::BaseShader>
+		[[nodiscard]] auto getAttachedShader() const noexcept -> ShaderType &;
 
 		auto use() const noexcept -> void;
 

@@ -7,7 +7,6 @@ project(glow
 set(CMAKE_CXX_STANDARD 23)
 
 add_library( glow SHARED
-		core.hpp
 		basic-types.hpp
 		shader.cc shader.hpp
 		shader-program.cc shader-program.hpp

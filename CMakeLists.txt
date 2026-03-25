@@ -8,7 +8,7 @@ project(TheShittyDarkProject
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(glfw3 3.5 REQUIRED)
+find_package(glfw3 3.4 REQUIRED)
 find_package(glm 1.0.3 REQUIRED)
 find_package(Boost 1.89 REQUIRED)
 

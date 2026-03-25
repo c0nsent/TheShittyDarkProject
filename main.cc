@@ -3,13 +3,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-#include "glow/core.hpp"
+#include "glow/basic-types.hpp"
 #include "glow/error.hpp"
 #include "glow/screen-cleaner.hpp"
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
 #include "glow/utility.hpp"
-
 
 #include <array>
 #include <iostream>

@@ -79,14 +79,14 @@ namespace glow
 
 
 	template<class T> requires std::derived_from<T, detail::BaseShader>
-	auto ShaderProgram::hasShader() const noexcept  -> bool
+	auto ShaderProgram::hasAttachedShader() const noexcept  -> bool
 	{
 		return std::get<T>(m_shaders).isExists();
 	}
 
 
 	template<class T> requires std::derived_from<T, detail::BaseShader>
-	auto ShaderProgram::getShader() const noexcept -> T &
+	auto ShaderProgram::getAttachedShader() const noexcept -> T &
 	{
 		return std::get<T>(m_shaders);
 	}

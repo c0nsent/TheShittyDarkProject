@@ -1,9 +1,10 @@
-#pragma once
+ #pragma once
 
 #include <glad/glad.h>
+#include "basic-types.hpp"
 
 
-namespace
+namespace glow
 {
 	class Loader
 	{

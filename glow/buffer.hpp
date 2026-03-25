@@ -2,7 +2,9 @@
 
 #include <array>
 
-#include "core.hpp"
+#include <glad/glad.h>
+
+#include "basic-types.hpp"
 
 //TODO: Добавить проверку размера входного массива на делимость без остатотка на страйд
 
