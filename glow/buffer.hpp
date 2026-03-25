@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "basic-types.hpp"
+#include "core.hpp"
 
 //TODO: Добавить проверку размера входного массива на делимость без остатотка на страйд
 
