@@ -2,8 +2,7 @@
 
 #include <array>
 
-#include "core.hpp"
-
+#include "basic-types.hpp"
 //TODO: Добавить проверку размера входного массива на делимость без остатотка на страйд
 
 namespace glow

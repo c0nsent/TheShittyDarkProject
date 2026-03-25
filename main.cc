@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
+#include <glm/vec4.hpp>
 
 #include "glow/basic-types.hpp"
 #include "glow/error.hpp"
@@ -9,11 +10,10 @@
 #include "glow/shader-program.hpp"
 #include "glow/shader.hpp"
 #include "glow/utility.hpp"
+#include "glow/uniform.hpp"
 
 #include <array>
 #include <iostream>
-
-#include "glow/uniform.hpp"
 
 
 using namespace glow::basicTypes;
@@ -34,11 +34,18 @@ auto framebufferSizeCallback(GLFWwindow *, const i32 width, const i32 height) ->
 }
 
 
-auto processInput(GLFWwindow *window) -> void
+
+
+auto processInput(GLFWwindow *window, f32 *opacity1, f32 *opacity2) -> void
 {
-	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        *opacity2 += 0.01f;
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        *opacity2 -= 0.01f;
 
 }
 
@@ -165,21 +172,24 @@ auto main() -> int
 	glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(indices.front()), reinterpret_cast<void *>(6 * sizeof(indices.front())));
 	glEnableVertexAttribArray(2);
 
-    glow::Error::printIfError();
 	shaderProgram.use();
-    //shaderProgram.getUniform1f("texture1").setValue(0);
-	//glUniform1i(glGetUniformLocation(shaderProgram.getId(), "texture1"), 0);
+	glUniform1i(glGetUniformLocation(shaderProgram.getId(), "texture1"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram.getId(), "texture2"), 1);
 
-    shaderProgram.getUniform1f("texture2").setValue(1);
 
-    glow::Error::printIfError();
+    f32 opacity1{1}, opacity2{0.1};
+
+
 
 	while (not glfwWindowShouldClose(window))
 	{
-		processInput(window);
+		processInput(window, &opacity1, &opacity2);
 
 		const glow::ClearBuffer clearBuffer{std::make_tuple(glow::Color{0.2f, 0.3f, 0.3f})};
 		clearBuffer.clear();
+
+	    shaderProgram.getUniform1f("opacity1").setValue(opacity1);
+	    shaderProgram.getUniform1f("opacity2").setValue(opacity2);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, containerTexture);

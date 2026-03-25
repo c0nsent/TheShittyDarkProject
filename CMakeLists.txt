@@ -26,9 +26,7 @@ target_include_directories(stb INTERFACE ${STB_INCLUDE_DIR})
 
 add_subdirectory(glow)
 
-add_executable(${PROJECT_NAME}
-		main.cc
-)
+add_executable(${PROJECT_NAME} main.cc)
 
 file(GLOB_RECURSE SHADER_FILES "shaders/*")
 add_custom_command(

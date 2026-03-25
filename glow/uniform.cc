@@ -7,7 +7,7 @@ namespace glow
 {
     Uniform1f::Uniform1f(const u32 shaderId, const char *name) noexcept
         : m_shaderProgram{shaderId}
-          , m_location{glGetUniformLocation(shaderId, name)}
+        , m_location{glGetUniformLocation(shaderId, name)}
     {
     }
 
