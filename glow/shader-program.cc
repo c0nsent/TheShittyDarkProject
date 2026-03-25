@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include "uniform.hpp"
+
 
 namespace glow
 {
@@ -92,7 +94,13 @@ namespace glow
 	}
 
 
-	auto ShaderProgram::use() const noexcept -> void
+    auto ShaderProgram::getUniform1f(const char *name) const noexcept -> Uniform1f
+	{
+	    return Uniform1f{m_id, name};
+	}
+
+
+    auto ShaderProgram::use() const noexcept -> void
 	{
 		glUseProgram(m_id);
 	}

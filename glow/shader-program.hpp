@@ -8,6 +8,8 @@
 
 namespace glow
 {
+    class Uniform1f;
+
 	class ShaderProgram final
 	{
 		enum class InfoType : u16
@@ -49,6 +51,8 @@ namespace glow
 
 		template<class ShaderType> requires std::derived_from<ShaderType, detail::BaseShader>
 		[[nodiscard]] auto getAttachedShader() const noexcept -> ShaderType &;
+
+	    [[nodiscard]] auto getUniform1f(const char *name) const noexcept -> Uniform1f;
 
 		auto use() const noexcept -> void;
 

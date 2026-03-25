@@ -13,6 +13,8 @@
 #include <array>
 #include <iostream>
 
+#include "glow/uniform.hpp"
+
 
 using namespace glow::basicTypes;
 
@@ -36,6 +38,8 @@ auto processInput(GLFWwindow *window) -> void
 {
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+
 }
 
 
@@ -145,8 +149,10 @@ auto main() -> int
 	glEnableVertexAttribArray(2);
 
 	shaderProgram.use();
-	glUniform1i(glGetUniformLocation(shaderProgram.getId(), "texture1"), 0);
-	glUniform1i(glGetUniformLocation(shaderProgram.getId(), "texture2"), 1);
+    shaderProgram.getUniform1f("texture1").setValue(0);
+	//glUniform1i(glGetUniformLocation(shaderProgram.getId(), "texture1"), 0);
+	glow::Error::printIfError();
+    shaderProgram.getUniform1f("texture2").setValue(0);
 
 
 	while (not glfwWindowShouldClose(window))

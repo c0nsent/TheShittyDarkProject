@@ -1,21 +1,22 @@
 #include "uniform.hpp"
 
-
 namespace glow
 {
-	void Uniform4f::setColor(const Color &color) const noexcept
-	{
-		glUniform4f(m_id, color.red, color.green, color.blue, color.alpha);
-	}
+    auto Uniform1f::setValue(const f32 val) const noexcept -> void
+    {
+        glUniform1f(m_id, val);
+    }
 
+    auto Uniform1f::value() const noexcept -> f32
+    {
+        f32 value;
+        glGetUniformfv(m_shaderId, m_id, &value);
+        return value;
+    }
 
-	Uniform4f::Uniform4f(const ShaderProgram &program, const char *name) noexcept
-		: m_id{glGetUniformLocation(program.getId(), name)} {}
-
-
-	Uniform4f::Uniform4f(const ShaderProgram &program, const char *name, const Color &color) noexcept
-		: Uniform4f{program, name}
-	{
-		setColor(color);
-	}
+    Uniform1f::Uniform1f(const u32 shaderId, const char *name) noexcept
+    : m_shaderId{shaderId}
+    , m_id{glGetUniformLocation(shaderId, name)}
+    {
+    }
 }

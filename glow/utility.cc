@@ -1,5 +1,7 @@
 #include "utility.hpp"
 
+#include <glad/glad.h>
+
 namespace glow
 {
 	auto viewport(const i32 x, const i32 y, const isize width, const isize height) noexcept -> void

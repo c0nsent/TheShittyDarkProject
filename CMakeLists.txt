@@ -54,7 +54,7 @@ add_custom_target(copy_textures DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/textures_sta
 add_dependencies(${PROJECT_NAME} copy_textures)
 
 target_link_libraries(${PROJECT_NAME}
-		glfw3
+		glfw
 		glm::glm
 		glow
 		stb

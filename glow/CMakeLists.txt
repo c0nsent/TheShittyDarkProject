@@ -6,7 +6,7 @@ project(glow
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_library( glow SHARED
+add_library(glow SHARED
 		basic-types.hpp
 		shader.cc shader.hpp
 		shader-program.cc shader-program.hpp
@@ -15,8 +15,9 @@ add_library( glow SHARED
 		screen-cleaner.cc screen-cleaner.hpp
 		error.cc error.hpp
 		utility.cc utility.hpp
-		uniform.cc uniform.hpp
+        uniform.cc uniform.hpp
 		texture.cc texture.hpp
+        uniform.cc
 )
 
 add_subdirectory(glad)

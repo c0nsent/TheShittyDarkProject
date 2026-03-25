@@ -2,8 +2,6 @@
 
 #include <array>
 
-#include <glad/glad.h>
-
 #include "basic-types.hpp"
 
 //TODO: Добавить проверку размера входного массива на делимость без остатотка на страйд
@@ -18,8 +16,8 @@ namespace glow
 
 			enum class Type : u16
 			{
-				ArrayBuffer = GL_ARRAY_BUFFER,
-				ElementArrayBuffer = GL_ELEMENT_ARRAY_BUFFER,
+				ArrayBuffer = 0x8892,
+				ElementArrayBuffer = 0x8893,
 			};
 
 			template<class T, std::size_t Size>
