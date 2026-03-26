@@ -37,7 +37,7 @@ namespace glow
 
 	auto Error::print(const Code code, const srcLoc loc) -> void
 	{
-		std::println("[ {0} | {1} ] Error : {2}", loc.file_name(), loc.function_name(), toString(code));
+		std::println("[ {0} | {1} | {2}] Error: {3}", loc.file_name(), loc.function_name(), loc.line(), toString(code));
 	}
 
 

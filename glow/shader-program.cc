@@ -18,8 +18,8 @@ namespace glow
 	}
 
 
-	ShaderProgram::ShaderProgram(CreateInfo &&createInfo)
-		: m_shaders{std::move(createInfo.vertexShader), std::move(createInfo.fragmentShader), std::move(createInfo.geometryShader)}
+	ShaderProgram::ShaderProgram(Shaders &&shaders)
+		: m_shaders{std::move(shaders)}
 		, m_id{glCreateProgram()}
 	{
 		auto attachIfExist{[&] (const auto &shader) noexcept
@@ -30,9 +30,10 @@ namespace glow
 			shader.deleteShader();
 		}};
 
-		attachIfExist(std::get<VertexShader>(m_shaders));
-		attachIfExist(std::get<FragmentShader>(m_shaders));
-		attachIfExist(std::get<GeometryShader>(m_shaders));
+	    std::apply([&](const auto &... args)
+	    {
+	        (attachIfExist(args), ...);
+	    }, m_shaders);
 
 		glLinkProgram(m_id);
 

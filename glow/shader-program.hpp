@@ -2,16 +2,17 @@
 
 #include "basic-types.hpp"
 #include "shader.hpp"
+#include "uniform.hpp"
 
 #include <tuple>
 
 
 namespace glow
 {
-    class Uniform1f;
-
 	class ShaderProgram final
 	{
+	    using Shaders = std::tuple<VertexShader, FragmentShader, GeometryShader>;
+
 		enum class InfoType : u16
 		{
 			DeleteStatus = 0x8B80,
@@ -32,7 +33,7 @@ namespace glow
 			GeometryShader geometryShader;
 		};
 
-		explicit ShaderProgram(CreateInfo &&createInfo);
+		explicit ShaderProgram(Shaders &&shaders);
 
 		~ShaderProgram();
 
@@ -58,7 +59,7 @@ namespace glow
 
 	private:
 
-		std::tuple<VertexShader, FragmentShader, GeometryShader> m_shaders;
+		Shaders m_shaders;
 
 		u32 m_id;
 	};

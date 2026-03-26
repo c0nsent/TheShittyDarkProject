@@ -104,10 +104,11 @@ auto main() -> int
 		return 1;
 	}
 
-	const glow::ShaderProgram shaderProgram{{
-		.vertexShader{"shaders/shader.vert"},
-		.fragmentShader{"shaders/shader.frag"}
-	}};
+	const glow::ShaderProgram shaderProgram{std::make_tuple(
+		glow::VertexShader{"shaders/shader.vert"},
+		glow::FragmentShader{"shaders/shader.frag"},
+		glow::GeometryShader{}
+	)};
 
 	constexpr auto vertices{ std::to_array<f32>({
 		 0.5f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f,	2.0f, 2.0f,
@@ -123,37 +124,55 @@ auto main() -> int
 
 	stbi_set_flip_vertically_on_load(true);
 
+    glow::Error::printIfError();
+
 	const auto containerTexture{createTexture("textures/container.png")};
 	const auto obamaTexture{createTexture("textures/obama.png")};
+
+    glow::Error::printIfError();
 
 	u32 vbo, vao, ebo;
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ebo);
 	glGenVertexArrays(1, &vao);
 
+    glow::Error::printIfError();
+
 	glBindVertexArray(vao);
+
+    glow::Error::printIfError();
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glNamedBufferData(vbo, vertices.size() * sizeof(vertices.front()), vertices.data(), GL_STATIC_DRAW);
 
+    glow::Error::printIfError();
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glNamedBufferData(ebo, indices.size() * sizeof(indices.front()), indices.data(), GL_STATIC_DRAW);
+
+    glow::Error::printIfError();
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * sizeof(indices.front()), reinterpret_cast<void *>(0));
 	glEnableVertexAttribArray(0);
 
+    glow::Error::printIfError();
+
 	glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * sizeof(indices.front()), reinterpret_cast<void*>(3 * sizeof(indices.front())));
 	glEnableVertexAttribArray(1);
+
+    glow::Error::printIfError();
 
 	glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * sizeof(indices.front()), reinterpret_cast<void *>(6 * sizeof(indices.front())));
 	glEnableVertexAttribArray(2);
 
+    glow::Error::printIfError();
 	shaderProgram.use();
-    shaderProgram.getUniform1f("texture1").setValue(0);
+    //shaderProgram.getUniform1f("texture1").setValue(0);
 	//glUniform1i(glGetUniformLocation(shaderProgram.getId(), "texture1"), 0);
-	glow::Error::printIfError();
-    shaderProgram.getUniform1f("texture2").setValue(0);
 
+    shaderProgram.getUniform1f("texture2").setValue(1);
+
+    glow::Error::printIfError();
 
 	while (not glfwWindowShouldClose(window))
 	{
